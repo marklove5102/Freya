@@ -22,9 +22,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-   02110-1301, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 
@@ -893,7 +891,7 @@ static void redundant_put_removal_BB (
    IRStmt* st;
    UInt    key = 0; /* keep gcc -O happy */
 
-   vassert(pxControl < VexRegUpdAllregsAtEachInsn);
+//   vassert(pxControl < VexRegUpdAllregsAtEachInsn);
 
    HashHW* env = newHHW();
 
@@ -1241,6 +1239,7 @@ static Bool isOnesU ( IRExpr* e )
 {
    if (e->tag != Iex_Const) return False;
    switch (e->Iex.Const.con->tag) {
+      case Ico_U1:    return toBool( e->Iex.Const.con->Ico.U1  == True);
       case Ico_U8:    return toBool( e->Iex.Const.con->Ico.U8  == 0xFF);
       case Ico_U16:   return toBool( e->Iex.Const.con->Ico.U16 == 0xFFFF);
       case Ico_U32:   return toBool( e->Iex.Const.con->Ico.U32
@@ -1294,12 +1293,20 @@ static IRExpr* mkOnesOfPrimopResultType ( IROp op )
       case Iop_Or32:
          return IRExpr_Const(IRConst_U32(0xFFFFFFFF));
       case Iop_CmpEQ8x8:
+      case Iop_CmpEQ16x4:
+      case Iop_CmpEQ32x2:
       case Iop_Or64:
          return IRExpr_Const(IRConst_U64(0xFFFFFFFFFFFFFFFFULL));
       case Iop_CmpEQ8x16:
       case Iop_CmpEQ16x8:
       case Iop_CmpEQ32x4:
+      case Iop_CmpEQ64x2:
          return IRExpr_Const(IRConst_V128(0xFFFF));
+      case Iop_CmpEQ8x32:
+      case Iop_CmpEQ16x16:
+      case Iop_CmpEQ32x8:
+      case Iop_CmpEQ64x4:
+         return IRExpr_Const(IRConst_V256(0xFFFFFFFF));
       default:
          ppIROp(op);
          vpanic("mkOnesOfPrimopResultType: bad primop");
@@ -1376,7 +1383,8 @@ static IRExpr* chase1 ( IRExpr** env, IRExpr* e )
       return env[(Int)e->Iex.RdTmp.tmp];
 }
 
-static IRExpr* fold_Expr ( IRExpr** env, IRExpr* e )
+__attribute__((noinline))
+static IRExpr* fold_Expr_WRK ( IRExpr** env, IRExpr* e )
 {
    Int     shift;
    IRExpr* e2 = e; /* e2 is the result of folding e, if possible */
@@ -1686,6 +1694,17 @@ static IRExpr* fold_Expr ( IRExpr** env, IRExpr* e )
             break;
          }
 
+         /* Similarly .. */
+         case Iop_V256toV128_0: case Iop_V256toV128_1: {
+            UInt v256 = e->Iex.Unop.arg->Iex.Const.con->Ico.V256;
+            if (v256 == 0x00000000) {
+               e2 = IRExpr_Const(IRConst_V128(0x0000));
+            } else {
+               goto unhandled;
+            }
+            break;
+         }
+
          case Iop_ZeroHI64ofV128: {
             /* Could do better here -- only need to look at the bottom 64 bits
                of the argument, really. */
@@ -1814,6 +1833,11 @@ static IRExpr* fold_Expr ( IRExpr** env, IRExpr* e )
                break;
 
             /* -- And -- */
+            case Iop_And1:
+               e2 = IRExpr_Const(IRConst_U1(toBool(
+                       (e->Iex.Binop.arg1->Iex.Const.con->Ico.U1
+                        & e->Iex.Binop.arg2->Iex.Const.con->Ico.U1))));
+               break;
             case Iop_And8:
                e2 = IRExpr_Const(IRConst_U8(toUChar( 
                        (e->Iex.Binop.arg1->Iex.Const.con->Ico.U8
@@ -2122,6 +2146,8 @@ static IRExpr* fold_Expr ( IRExpr** env, IRExpr* e )
             }
 
             /* -- V128 stuff -- */
+            case Iop_InterleaveLO64x2: // This, and the HI64, are created
+            case Iop_InterleaveHI64x2: // by the amd64 PTEST translation
             case Iop_InterleaveLO8x16: {
                /* This turns up a lot in Memcheck instrumentation of
                   Icc generated code.  I don't know why. */
@@ -2254,31 +2280,32 @@ static IRExpr* fold_Expr ( IRExpr** env, IRExpr* e )
                }
                break;
 
+            case Iop_And1:
             case Iop_And8:
             case Iop_And16:
             case Iop_And32:
             case Iop_And64:
-               /* And8/And16/And32/And64(x,1---1b) ==> x */
+               /* And1/And8/And16/And32/And64(x,1---1b) ==> x */
                if (isOnesU(e->Iex.Binop.arg2)) {
                   e2 = e->Iex.Binop.arg1;
                   break;
                }
-               /* And8/And16/And32/And64(1---1b,x) ==> x */
+               /* And1/And8/And16/And32/And64(1---1b,x) ==> x */
                if (isOnesU(e->Iex.Binop.arg1)) {
                   e2 = e->Iex.Binop.arg2;
                   break;
                }
-               /* And8/And16/And32/And64(x,0) ==> 0 */
+               /* And1/And8/And16/And32/And64(x,0) ==> 0 */
                if (isZeroU(e->Iex.Binop.arg2)) {
                   e2 = e->Iex.Binop.arg2;
                   break;
                }
-               /* And8/And16/And32/And64(0,x) ==> 0 */
+               /* And1/And8/And16/And32/And64(0,x) ==> 0 */
                if (isZeroU(e->Iex.Binop.arg1)) {
                   e2 = e->Iex.Binop.arg1;
                   break;
                }
-               /* And8/And16/And32/And64(t,t) ==> t, for some IRTemp t */
+               /* And1/And8/And16/And32/And64(t,t) ==> t, for some IRTemp t */
                if (sameIRExprs(env, e->Iex.Binop.arg1, e->Iex.Binop.arg2)) {
                   e2 = e->Iex.Binop.arg1;
                   break;
@@ -2312,6 +2339,27 @@ static IRExpr* fold_Expr ( IRExpr** env, IRExpr* e )
                   if (isOnesV128(e->Iex.Binop.arg2)) {
                      e2 = e->Iex.Binop.arg1;
                      break;
+                  }
+               }
+               /* AndV128( x, NotV128( x ) ) ==> 0...0  and
+                  AndV256( x, NotV256( x ) ) ==> 0...0
+                  This is generated by amd64 `ptest %xmmReg, %xmmReg`
+                    (the same reg both times)
+                  See https://bugzilla.redhat.com/show_bug.cgi?id=2257546 */
+               if (e->Iex.Binop.op == Iop_AndV128
+                   || e->Iex.Binop.op == Iop_AndV256) {
+                  Bool isV256 = e->Iex.Binop.op == Iop_AndV256;
+                  IRExpr* x1 = chase(env, e->Iex.Binop.arg1);
+                  IRExpr* rhs = chase(env, e->Iex.Binop.arg2);
+                  if (x1 && rhs
+                         && rhs->tag == Iex_Unop
+                         && rhs->Iex.Unop.op == (isV256 ? Iop_NotV256
+                                                        : Iop_NotV128)) {
+                     IRExpr* x2 = chase(env, rhs->Iex.Unop.arg);
+                     if (x2 && sameIRExprs(env, x1, x2)) {
+                        e2 = mkZeroOfPrimopResultType(e->Iex.Binop.op);
+                        break;
+                     }
                   }
                }
                break;
@@ -2354,7 +2402,7 @@ static IRExpr* fold_Expr ( IRExpr** env, IRExpr* e )
             case Iop_Xor64:
             case Iop_XorV128:
             case Iop_XorV256:
-               /* Xor8/16/32/64/V128(t,t) ==> 0, for some IRTemp t */
+               /* Xor8/16/32/64/V128/V256(t,t) ==> 0, for some IRTemp t */
                if (sameIRExprs(env, e->Iex.Binop.arg1, e->Iex.Binop.arg2)) {
                   e2 = mkZeroOfPrimopResultType(e->Iex.Binop.op);
                   break;
@@ -2401,12 +2449,23 @@ static IRExpr* fold_Expr ( IRExpr** env, IRExpr* e )
                }
                break;
 
+            // in total 32 bits
             case Iop_CmpEQ32:
+            // in total 64 bits
             case Iop_CmpEQ64:
             case Iop_CmpEQ8x8:
+            case Iop_CmpEQ16x4:
+            case Iop_CmpEQ32x2:
+            // in total 128 bits
             case Iop_CmpEQ8x16:
             case Iop_CmpEQ16x8:
             case Iop_CmpEQ32x4:
+            case Iop_CmpEQ64x2:
+            // in total 256 bits
+            case Iop_CmpEQ8x32:
+            case Iop_CmpEQ16x16:
+            case Iop_CmpEQ32x8:
+            case Iop_CmpEQ64x4:
                if (sameIRExprs(env, e->Iex.Binop.arg1, e->Iex.Binop.arg2)) {
                   e2 = mkOnesOfPrimopResultType(e->Iex.Binop.op);
                   break;
@@ -2462,7 +2521,7 @@ static IRExpr* fold_Expr ( IRExpr** env, IRExpr* e )
        && !debug_only_hack_sameIRExprs_might_assert(e->Iex.Binop.arg1,
                                                     e->Iex.Binop.arg2)
        && sameIRExprs(env, e->Iex.Binop.arg1, e->Iex.Binop.arg2)) {
-      vex_printf("vex iropt: fold_Expr: no ident rule for: ");
+      vex_printf("vex iropt: fold_Expr_WRK: no ident rule for: ");
       ppIRExpr(e);
       vex_printf("\n");
    }
@@ -2483,7 +2542,7 @@ static IRExpr* fold_Expr ( IRExpr** env, IRExpr* e )
    vpanic("fold_Expr: no rule for the above");
 #  else
    if (vex_control.iropt_verbosity > 0) {
-      vex_printf("vex iropt: fold_Expr: no const rule for: ");
+      vex_printf("vex iropt: fold_Expr_WRK: no const rule for: ");
       ppIRExpr(e);
       vex_printf("\n");
    }
@@ -2491,6 +2550,14 @@ static IRExpr* fold_Expr ( IRExpr** env, IRExpr* e )
 #  endif
 }
 
+/* Fold |e| as much as possible, given the bindings in |env|.  If no folding is
+   possible, just return |e|.  Also, if |env| is NULL, don't even try to
+   fold; just return |e| directly. */
+inline
+static IRExpr* fold_Expr ( IRExpr** env, IRExpr* e )
+{
+   return env == NULL ? e : fold_Expr_WRK(env, e);
+}
 
 /* Apply the subst to a simple 1-level expression -- guaranteed to be
    1-level due to previous flattening pass. */
@@ -2606,32 +2673,36 @@ static IRExpr* subst_Expr ( IRExpr** env, IRExpr* ex )
 }
 
 
-/* Apply the subst to stmt, then fold the result as much as possible.
-   Much simplified due to stmt being previously flattened.  As a
-   result of this, the stmt may wind up being turned into a no-op.  
+/* Apply the subst to stmt, then, if |doFolding| is |True|, fold the result as
+   much as possible.  Much simplified due to stmt being previously flattened.
+   As a result of this, the stmt may wind up being turned into a no-op.
 */
-static IRStmt* subst_and_fold_Stmt ( IRExpr** env, IRStmt* st )
+static IRStmt* subst_and_maybe_fold_Stmt ( Bool doFolding,
+                                           IRExpr** env, IRStmt* st )
 {
 #  if 0
-   vex_printf("\nsubst and fold stmt\n");
+   vex_printf("\nsubst and maybe fold stmt\n");
    ppIRStmt(st);
    vex_printf("\n");
 #  endif
+
+   IRExpr** s_env = env;
+   IRExpr** f_env = doFolding ? env : NULL;
 
    switch (st->tag) {
       case Ist_AbiHint:
          vassert(isIRAtom(st->Ist.AbiHint.base));
          vassert(isIRAtom(st->Ist.AbiHint.nia));
          return IRStmt_AbiHint(
-                   fold_Expr(env, subst_Expr(env, st->Ist.AbiHint.base)),
+                   fold_Expr(f_env, subst_Expr(s_env, st->Ist.AbiHint.base)),
                    st->Ist.AbiHint.len,
-                   fold_Expr(env, subst_Expr(env, st->Ist.AbiHint.nia))
+                   fold_Expr(f_env, subst_Expr(s_env, st->Ist.AbiHint.nia))
                 );
       case Ist_Put:
          vassert(isIRAtom(st->Ist.Put.data));
          return IRStmt_Put(
                    st->Ist.Put.offset, 
-                   fold_Expr(env, subst_Expr(env, st->Ist.Put.data)) 
+                   fold_Expr(f_env, subst_Expr(s_env, st->Ist.Put.data))
                 );
 
       case Ist_PutI: {
@@ -2640,9 +2711,9 @@ static IRStmt* subst_and_fold_Stmt ( IRExpr** env, IRStmt* st )
          vassert(isIRAtom(puti->ix));
          vassert(isIRAtom(puti->data));
          puti2 = mkIRPutI(puti->descr,
-                          fold_Expr(env, subst_Expr(env, puti->ix)),
+                          fold_Expr(f_env, subst_Expr(s_env, puti->ix)),
                           puti->bias,
-                          fold_Expr(env, subst_Expr(env, puti->data)));
+                          fold_Expr(f_env, subst_Expr(s_env, puti->data)));
          return IRStmt_PutI(puti2);
       }
 
@@ -2651,7 +2722,7 @@ static IRStmt* subst_and_fold_Stmt ( IRExpr** env, IRStmt* st )
             allowed to be more than just a constant or a tmp. */
          return IRStmt_WrTmp(
                    st->Ist.WrTmp.tmp,
-                   fold_Expr(env, subst_Expr(env, st->Ist.WrTmp.data))
+                   fold_Expr(f_env, subst_Expr(s_env, st->Ist.WrTmp.data))
                 );
 
       case Ist_Store:
@@ -2659,8 +2730,8 @@ static IRStmt* subst_and_fold_Stmt ( IRExpr** env, IRStmt* st )
          vassert(isIRAtom(st->Ist.Store.data));
          return IRStmt_Store(
                    st->Ist.Store.end,
-                   fold_Expr(env, subst_Expr(env, st->Ist.Store.addr)),
-                   fold_Expr(env, subst_Expr(env, st->Ist.Store.data))
+                   fold_Expr(f_env, subst_Expr(s_env, st->Ist.Store.addr)),
+                   fold_Expr(f_env, subst_Expr(s_env, st->Ist.Store.data))
                 );
 
       case Ist_StoreG: {
@@ -2668,9 +2739,9 @@ static IRStmt* subst_and_fold_Stmt ( IRExpr** env, IRStmt* st )
          vassert(isIRAtom(sg->addr));
          vassert(isIRAtom(sg->data));
          vassert(isIRAtom(sg->guard));
-         IRExpr* faddr  = fold_Expr(env, subst_Expr(env, sg->addr));
-         IRExpr* fdata  = fold_Expr(env, subst_Expr(env, sg->data));
-         IRExpr* fguard = fold_Expr(env, subst_Expr(env, sg->guard));
+         IRExpr* faddr  = fold_Expr(f_env, subst_Expr(s_env, sg->addr));
+         IRExpr* fdata  = fold_Expr(f_env, subst_Expr(s_env, sg->data));
+         IRExpr* fguard = fold_Expr(f_env, subst_Expr(s_env, sg->guard));
          if (fguard->tag == Iex_Const) {
             /* The condition on this store has folded down to a constant. */
             vassert(fguard->Iex.Const.con->tag == Ico_U1);
@@ -2695,9 +2766,9 @@ static IRStmt* subst_and_fold_Stmt ( IRExpr** env, IRStmt* st )
          vassert(isIRAtom(lg->addr));
          vassert(isIRAtom(lg->alt));
          vassert(isIRAtom(lg->guard));
-         IRExpr* faddr  = fold_Expr(env, subst_Expr(env, lg->addr));
-         IRExpr* falt   = fold_Expr(env, subst_Expr(env, lg->alt));
-         IRExpr* fguard = fold_Expr(env, subst_Expr(env, lg->guard));
+         IRExpr* faddr  = fold_Expr(f_env, subst_Expr(s_env, lg->addr));
+         IRExpr* falt   = fold_Expr(f_env, subst_Expr(s_env, lg->alt));
+         IRExpr* fguard = fold_Expr(f_env, subst_Expr(s_env, lg->guard));
          if (fguard->tag == Iex_Const) {
             /* The condition on this load has folded down to a constant. */
             vassert(fguard->Iex.Const.con->tag == Ico_U1);
@@ -2729,13 +2800,15 @@ static IRStmt* subst_and_fold_Stmt ( IRExpr** env, IRStmt* st )
          vassert(isIRAtom(cas->dataLo));
          cas2 = mkIRCAS(
                    cas->oldHi, cas->oldLo, cas->end, 
-                   fold_Expr(env, subst_Expr(env, cas->addr)),
-                   cas->expdHi ? fold_Expr(env, subst_Expr(env, cas->expdHi))
+                   fold_Expr(f_env, subst_Expr(s_env, cas->addr)),
+                   cas->expdHi ? fold_Expr(f_env,
+                                           subst_Expr(s_env, cas->expdHi))
                                : NULL,
-                   fold_Expr(env, subst_Expr(env, cas->expdLo)),
-                   cas->dataHi ? fold_Expr(env, subst_Expr(env, cas->dataHi))
+                   fold_Expr(f_env, subst_Expr(s_env, cas->expdLo)),
+                   cas->dataHi ? fold_Expr(f_env,
+                                           subst_Expr(s_env, cas->dataHi))
                                : NULL,
-                   fold_Expr(env, subst_Expr(env, cas->dataLo))
+                   fold_Expr(f_env, subst_Expr(s_env, cas->dataLo))
                 );
          return IRStmt_CAS(cas2);
       }
@@ -2747,9 +2820,10 @@ static IRStmt* subst_and_fold_Stmt ( IRExpr** env, IRStmt* st )
          return IRStmt_LLSC(
                    st->Ist.LLSC.end,
                    st->Ist.LLSC.result,
-                   fold_Expr(env, subst_Expr(env, st->Ist.LLSC.addr)),
+                   fold_Expr(f_env, subst_Expr(s_env, st->Ist.LLSC.addr)),
                    st->Ist.LLSC.storedata
-                      ? fold_Expr(env, subst_Expr(env, st->Ist.LLSC.storedata))
+                      ? fold_Expr(f_env,
+                                  subst_Expr(s_env, st->Ist.LLSC.storedata))
                       : NULL
                 );
 
@@ -2762,15 +2836,15 @@ static IRStmt* subst_and_fold_Stmt ( IRExpr** env, IRStmt* st )
          d2->args = shallowCopyIRExprVec(d2->args);
          if (d2->mFx != Ifx_None) {
             vassert(isIRAtom(d2->mAddr));
-            d2->mAddr = fold_Expr(env, subst_Expr(env, d2->mAddr));
+            d2->mAddr = fold_Expr(f_env, subst_Expr(s_env, d2->mAddr));
          }
          vassert(isIRAtom(d2->guard));
-         d2->guard = fold_Expr(env, subst_Expr(env, d2->guard));
+         d2->guard = fold_Expr(f_env, subst_Expr(s_env, d2->guard));
          for (i = 0; d2->args[i]; i++) {
             IRExpr* arg = d2->args[i];
             if (LIKELY(!is_IRExpr_VECRET_or_GSPTR(arg))) {
                vassert(isIRAtom(arg));
-               d2->args[i] = fold_Expr(env, subst_Expr(env, arg));
+               d2->args[i] = fold_Expr(f_env, subst_Expr(s_env, arg));
             }
          }
          return IRStmt_Dirty(d2);
@@ -2790,7 +2864,7 @@ static IRStmt* subst_and_fold_Stmt ( IRExpr** env, IRStmt* st )
       case Ist_Exit: {
          IRExpr* fcond;
          vassert(isIRAtom(st->Ist.Exit.guard));
-         fcond = fold_Expr(env, subst_Expr(env, st->Ist.Exit.guard));
+         fcond = fold_Expr(f_env, subst_Expr(s_env, st->Ist.Exit.guard));
          if (fcond->tag == Iex_Const) {
             /* Interesting.  The condition on this exit has folded down to
                a constant. */
@@ -2821,7 +2895,8 @@ static IRStmt* subst_and_fold_Stmt ( IRExpr** env, IRStmt* st )
 }
 
 
-IRSB* cprop_BB ( IRSB* in )
+__attribute__((noinline))
+static IRSB* cprop_BB_WRK ( IRSB* in, Bool mustRetainNoOps, Bool doFolding )
 {
    Int      i;
    IRSB*    out;
@@ -2856,9 +2931,9 @@ IRSB* cprop_BB ( IRSB* in )
       st2 = in->stmts[i];
 
       /* perhaps st2 is already a no-op? */
-      if (st2->tag == Ist_NoOp) continue;
+      if (st2->tag == Ist_NoOp && !mustRetainNoOps) continue;
 
-      st2 = subst_and_fold_Stmt( env, st2 );
+      st2 = subst_and_maybe_fold_Stmt( doFolding, env, st2 );
 
       /* Deal with some post-folding special cases. */
       switch (st2->tag) {
@@ -2866,7 +2941,11 @@ IRSB* cprop_BB ( IRSB* in )
          /* If the statement has been folded into a no-op, forget
             it. */
          case Ist_NoOp:
-            continue;
+            if (mustRetainNoOps) {
+               break;
+            } else {
+               continue;
+            }
 
          /* If the statement assigns to an IRTemp add it to the
             running environment. This is for the benefit of copy
@@ -2897,7 +2976,7 @@ IRSB* cprop_BB ( IRSB* in )
             IRExpr*  guard = lg->guard;
             if (guard->tag == Iex_Const) {
                /* The guard has folded to a constant, and that
-                  constant must be 1:I1, since subst_and_fold_Stmt
+                  constant must be 1:I1, since subst_and_maybe_fold_Stmt
                   folds out the case 0:I1 by itself. */
                vassert(guard->Iex.Const.con->tag == Ico_U1);
                vassert(guard->Iex.Const.con->Ico.U1 == True);
@@ -2981,6 +3060,11 @@ IRSB* cprop_BB ( IRSB* in )
    }
 
    return out;
+}
+
+
+IRSB* cprop_BB ( IRSB* in ) {
+   return cprop_BB_WRK(in, /*mustRetainNoOps=*/False, /*doFolding=*/True);
 }
 
 
@@ -4667,7 +4751,7 @@ static void deltaIRExpr ( IRExpr* e, Int delta )
 /* Adjust all tmp values (names) in st by delta.  st is destructively
    modified. */
 
-static void deltaIRStmt ( IRStmt* st, Int delta )
+/*static*/ void deltaIRStmt ( IRStmt* st, Int delta )
 {
    Int      i;
    IRDirty* d;
@@ -5436,6 +5520,14 @@ static IRExpr* fold_IRExpr_Unop ( IROp op, IRExpr* aa )
       /* 64to32( 8Uto64 ( x )) --> 8Uto32(x) */
       if (is_Unop(aa, Iop_8Uto64))
          return IRExpr_Unop(Iop_8Uto32, aa->Iex.Unop.arg);
+      break;
+   case Iop_64to16:
+      /* 64to16( 16Uto64 ( x )) --> x */
+      if (is_Unop(aa, Iop_16Uto64))
+         return aa->Iex.Unop.arg;
+      /* 64to16( 32Uto64 ( x )) --> 32to16(x) */
+      if (is_Unop(aa, Iop_32Uto64))
+         return IRExpr_Unop(Iop_32to16, aa->Iex.Unop.arg);
       break;
 
    case Iop_32Uto64:
@@ -6320,7 +6412,7 @@ static Bool do_XOR_TRANSFORM_IRSB ( IRSB* sb )
       if (st->tag != Ist_WrTmp)
          continue;
       IRTemp t = st->Ist.WrTmp.tmp;
-      vassert(t >= 0 && t < n_tmps);
+      vassert(t < n_tmps);
       env[t] = st->Ist.WrTmp.data;
    }
 
@@ -6634,8 +6726,6 @@ static void considerExpensives ( /*OUT*/Bool* hasGetIorPutI,
      may get shared.  So never change a field of such a tree node;
      instead construct and return a new one if needed.
 */
-
-
 IRSB* do_iropt_BB(
          IRSB* bb0,
          IRExpr* (*specHelper) (const HChar*, IRExpr**, IRStmt**, Int),
@@ -6649,22 +6739,27 @@ IRSB* do_iropt_BB(
    static Int n_expensive = 0;
 
    Bool hasGetIorPutI, hasVorFtemps;
-   IRSB *bb, *bb2;
 
    n_total++;
 
-   /* First flatten the block out, since all other
-      phases assume flat code. */
-
-   bb = flatten_BB ( bb0 );
-
-   if (iropt_verbose) {
-      vex_printf("\n========= FLAT\n\n" );
-      ppIRSB(bb);
+   /* Flatness: this function assumes that the incoming block is already flat.
+      That's because all blocks that arrive here should already have been
+      processed by do_minimal_initial_iropt_BB.  And that will have flattened
+      them out. */
+   // FIXME Remove this assertion once the 'grail' machinery seems stable
+   // FIXME2 The TOC-redirect-hacks generators in m_translate.c -- gen_PUSH()
+   //        and gen_PO() -- don't generate flat IR, and so cause this assertion
+   //        to fail.  For the time being, hack around this by flattening,
+   //        rather than asserting for flatness, on the afflicted platforms.
+   //        This is a kludge, yes.
+   if (guest_arch == VexArchPPC64) {
+      bb0 = flatten_BB(bb0); // Kludge!
+   } else {
+      vassert(isFlatIRSB(bb0)); // How it Really Should Be (tm).
    }
 
    /* If at level 0, stop now. */
-   if (vex_control.iropt_level <= 0) return bb;
+   if (vex_control.iropt_level <= 0) return bb0;
 
    /* Now do a preliminary cleanup pass, and figure out if we also
       need to do 'expensive' optimisations.  Expensive optimisations
@@ -6672,7 +6767,8 @@ IRSB* do_iropt_BB(
       If needed, do expensive transformations and then another cheap
       cleanup pass. */
 
-   bb = cheap_transformations( bb, specHelper, preciseMemExnsFn, pxControl );
+   IRSB* bb = cheap_transformations( bb0, specHelper,
+                                     preciseMemExnsFn, pxControl );
 
    if (guest_arch == VexArchARM) {
       /* Translating Thumb2 code produces a lot of chaff.  We have to
@@ -6727,7 +6823,7 @@ IRSB* do_iropt_BB(
       /* Now have a go at unrolling simple (single-BB) loops.  If
          successful, clean up the results as much as possible. */
 
-      bb2 = maybe_loop_unroll_BB( bb, guest_addr );
+      IRSB* bb2 = maybe_loop_unroll_BB( bb, guest_addr );
       if (bb2) {
          bb = cheap_transformations( bb2, specHelper,
                                      preciseMemExnsFn, pxControl );
@@ -6748,6 +6844,71 @@ IRSB* do_iropt_BB(
    return bb;
 }
 
+IRSB* do_minimal_initial_iropt_BB(IRSB* bb0) {
+   /* First flatten the block out, since all other phases assume flat code. */
+   IRSB* bb = flatten_BB ( bb0 );
+
+   if (iropt_verbose) {
+      vex_printf("\n========= FLAT\n\n" );
+      ppIRSB(bb);
+   }
+
+   // Remove redundant GETs
+   redundant_get_removal_BB ( bb );
+
+   // Do minimal constant prop: copy prop and constant prop only.  No folding.
+   // JRS FIXME 2019Nov25: this is too weak to be effective on arm32.  For that,
+   // specifying doFolding=True makes a huge difference.
+   bb = cprop_BB_WRK ( bb, /*mustRetainNoOps=*/True,
+                           /*doFolding=*/False );
+
+   // Minor tidying of the block end, to remove a redundant Put of the IP right
+   // at the end:
+   /*
+   ------ IMark(0x401FEC9, 2, 0) ------
+   t18 = GET:I64(168)
+   t19 = amd64g_calculate_condition[mcx=0x13]{0x58155130}(0x4:I64,0x5:I64,..
+   t14 = 64to1(t19)
+   if (t14) { PUT(184) = 0x401FED6:I64; exit-Boring } 
+   PUT(184) = 0x401FECB:I64  <--------------------------------
+   PUT(184) = 0x401FECB:I64; exit-Boring
+   */
+   if (bb->stmts_used > 0) {
+      const IRStmt* last = bb->stmts[bb->stmts_used - 1];
+      if (last->tag == Ist_Put && last->Ist.Put.offset == bb->offsIP
+          && eqIRAtom(last->Ist.Put.data, bb->next)) {
+         bb->stmts_used--;
+      }
+   }
+
+   return bb;
+}
+
+/* Copy the contents of |src| to the end of |dst|.  This entails fixing up the
+   tmp numbers in |src| accordingly.  The final destination of |dst| is thrown
+   away and replaced by the final destination of |src|.  This function doesn't
+   make any assessment of whether it's meaningful or valid to concatenate the
+   two IRSBs; it just *does* the concatenation. */
+void concatenate_irsbs ( IRSB* dst, IRSB* src )
+{
+   // FIXME this is almost identical to code at the end of maybe_unroll_loop_BB.
+   // Maybe try to common it up.
+   Int delta = dst->tyenv->types_used;
+   for (Int i = 0; i < src->tyenv->types_used; i++) {
+      (void)newIRTemp(dst->tyenv, src->tyenv->types[i]);
+   }
+
+   for (Int i = 0; i < src->stmts_used; i++) {
+      IRStmt* s = deepCopyIRStmt(src->stmts[i]);
+      deltaIRStmt(s, delta);
+      addStmtToIRSB(dst, s);
+   }
+   deltaIRExpr(src->next, delta);
+
+   dst->next = src->next;
+   dst->jumpkind = src->jumpkind;
+   vassert(dst->offsIP == src->offsIP);
+}
 
 /*---------------------------------------------------------------*/
 /*--- end                                            ir_opt.c ---*/

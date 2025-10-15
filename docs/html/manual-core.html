@@ -1,13 +1,13 @@
 <html>
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-<title>2. Using and understanding the Valgrind core</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>2.Â Using and understanding the Valgrind core</title>
 <link rel="stylesheet" type="text/css" href="vg_basic.css">
 <meta name="generator" content="DocBook XSL Stylesheets Vsnapshot">
 <link rel="home" href="index.html" title="Valgrind Documentation">
 <link rel="up" href="manual.html" title="Valgrind User Manual">
-<link rel="prev" href="manual-intro.html" title="1. Introduction">
-<link rel="next" href="manual-core-adv.html" title="3. Using and understanding the Valgrind core: Advanced Topics">
+<link rel="prev" href="manual-intro.html" title="1.Â Introduction">
+<link rel="next" href="manual-core-adv.html" title="3.Â Using and understanding the Valgrind core: Advanced Topics">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
 <div><table class="nav" width="100%" cellspacing="3" cellpadding="3" border="0" summary="Navigation header"><tr>
@@ -19,7 +19,7 @@
 </tr></table></div>
 <div class="chapter">
 <div class="titlepage"><div><div><h1 class="title">
-<a name="manual-core"></a>2. Using and understanding the Valgrind core</h1></div></div></div>
+<a name="manual-core"></a>2.Â Using and understanding the Valgrind core</h1></div></div></div>
 <div class="toc">
 <p><b>Table of Contents</b></p>
 <dl class="toc">
@@ -28,39 +28,41 @@
 <dt><span class="sect1"><a href="manual-core.html#manual-core.comment">2.3. The Commentary</a></span></dt>
 <dt><span class="sect1"><a href="manual-core.html#manual-core.report">2.4. Reporting of errors</a></span></dt>
 <dt><span class="sect1"><a href="manual-core.html#manual-core.suppress">2.5. Suppressing errors</a></span></dt>
-<dt><span class="sect1"><a href="manual-core.html#manual-core.options">2.6. Core Command-line Options</a></span></dt>
+<dt><span class="sect1"><a href="manual-core.html#manual-core.debuginfod">2.6. Debuginfod</a></span></dt>
+<dt><span class="sect1"><a href="manual-core.html#manual-core.options">2.7. Core Command-line Options</a></span></dt>
 <dd><dl>
-<dt><span class="sect2"><a href="manual-core.html#manual-core.toolopts">2.6.1. Tool-selection Option</a></span></dt>
-<dt><span class="sect2"><a href="manual-core.html#manual-core.basicopts">2.6.2. Basic Options</a></span></dt>
-<dt><span class="sect2"><a href="manual-core.html#manual-core.erropts">2.6.3. Error-related Options</a></span></dt>
-<dt><span class="sect2"><a href="manual-core.html#manual-core.mallocopts">2.6.4. malloc-related Options</a></span></dt>
-<dt><span class="sect2"><a href="manual-core.html#manual-core.rareopts">2.6.5. Uncommon Options</a></span></dt>
-<dt><span class="sect2"><a href="manual-core.html#manual-core.debugopts">2.6.6. Debugging Options</a></span></dt>
-<dt><span class="sect2"><a href="manual-core.html#manual-core.defopts">2.6.7. Setting Default Options</a></span></dt>
+<dt><span class="sect2"><a href="manual-core.html#manual-core.toolopts">2.7.1. Tool-selection Option</a></span></dt>
+<dt><span class="sect2"><a href="manual-core.html#manual-core.basicopts">2.7.2. Basic Options</a></span></dt>
+<dt><span class="sect2"><a href="manual-core.html#manual-core.erropts">2.7.3. Error-related Options</a></span></dt>
+<dt><span class="sect2"><a href="manual-core.html#manual-core.mallocopts">2.7.4. malloc-related Options</a></span></dt>
+<dt><span class="sect2"><a href="manual-core.html#manual-core.rareopts">2.7.5. Uncommon Options</a></span></dt>
+<dt><span class="sect2"><a href="manual-core.html#manual-core.debugopts">2.7.6. Debugging Options</a></span></dt>
+<dt><span class="sect2"><a href="manual-core.html#manual-core.defopts">2.7.7. Setting Default Options</a></span></dt>
+<dt><span class="sect2"><a href="manual-core.html#manual-core.dynopts">2.7.8. Dynamically Changing Options</a></span></dt>
 </dl></dd>
-<dt><span class="sect1"><a href="manual-core.html#manual-core.pthreads">2.7. Support for Threads</a></span></dt>
-<dd><dl><dt><span class="sect2"><a href="manual-core.html#manual-core.pthreads_perf_sched">2.7.1. Scheduling and Multi-Thread Performance</a></span></dt></dl></dd>
-<dt><span class="sect1"><a href="manual-core.html#manual-core.signals">2.8. Handling of Signals</a></span></dt>
-<dt><span class="sect1"><a href="manual-core.html#manual-core.xtree">2.9. Execution Trees</a></span></dt>
-<dt><span class="sect1"><a href="manual-core.html#manual-core.install">2.10. Building and Installing Valgrind</a></span></dt>
-<dt><span class="sect1"><a href="manual-core.html#manual-core.problems">2.11. If You Have Problems</a></span></dt>
-<dt><span class="sect1"><a href="manual-core.html#manual-core.limits">2.12. Limitations</a></span></dt>
-<dt><span class="sect1"><a href="manual-core.html#manual-core.example">2.13. An Example Run</a></span></dt>
-<dt><span class="sect1"><a href="manual-core.html#manual-core.warnings">2.14. Warning Messages You Might See</a></span></dt>
+<dt><span class="sect1"><a href="manual-core.html#manual-core.pthreads">2.8. Support for Threads</a></span></dt>
+<dd><dl><dt><span class="sect2"><a href="manual-core.html#manual-core.pthreads_perf_sched">2.8.1. Scheduling and Multi-Thread Performance</a></span></dt></dl></dd>
+<dt><span class="sect1"><a href="manual-core.html#manual-core.signals">2.9. Handling of Signals</a></span></dt>
+<dt><span class="sect1"><a href="manual-core.html#manual-core.xtree">2.10. Execution Trees</a></span></dt>
+<dt><span class="sect1"><a href="manual-core.html#manual-core.install">2.11. Building and Installing Valgrind</a></span></dt>
+<dt><span class="sect1"><a href="manual-core.html#manual-core.problems">2.12. If You Have Problems</a></span></dt>
+<dt><span class="sect1"><a href="manual-core.html#manual-core.limits">2.13. Limitations</a></span></dt>
+<dt><span class="sect1"><a href="manual-core.html#manual-core.example">2.14. An Example Run</a></span></dt>
+<dt><span class="sect1"><a href="manual-core.html#manual-core.warnings">2.15. Warning Messages You Might See</a></span></dt>
 </dl>
 </div>
 <p>This chapter describes the Valgrind core services, command-line
 options and behaviours.  That means it is relevant regardless of what
 particular tool you are using.  The information should be sufficient for you
 to make effective day-to-day use of Valgrind.  Advanced topics related to
-the Valgrind core are described in <a class="xref" href="manual-core-adv.html" title="3. Using and understanding the Valgrind core: Advanced Topics">Valgrind's core: advanced topics</a>.
+the Valgrind core are described in <a class="xref" href="manual-core-adv.html" title="3.Â Using and understanding the Valgrind core: Advanced Topics">Valgrind's core: advanced topics</a>.
 </p>
 <p>
 A point of terminology: most references to "Valgrind" in this chapter
 refer to the Valgrind core services.  </p>
 <div class="sect1">
 <div class="titlepage"><div><div><h2 class="title" style="clear: both">
-<a name="manual-core.whatdoes"></a>2.1. What Valgrind does with your program</h2></div></div></div>
+<a name="manual-core.whatdoes"></a>2.1.Â What Valgrind does with your program</h2></div></div></div>
 <p>Valgrind is designed to be as non-intrusive as possible. It works
 directly with existing executables. You don't need to recompile, relink,
 or otherwise modify the program to be checked.</p>
@@ -109,13 +111,17 @@ To make it easier to write suppressions, you can use the
 <code class="option">--gen-suppressions=yes</code> option.  This tells Valgrind to
 print out a suppression for each reported error, which you can then
 copy into a suppressions file.</p>
+<p>Valgrind will try to match the behaviour of applications
+compiled to run on the same OS and libraries that Valgrind was
+built with. If you use different libraries or a different
+OS version there may be some small differences in behaviour.</p>
 <p>Different error-checking tools report different kinds of errors.
 The suppression mechanism therefore allows you to say which tool or
 tool(s) each suppression applies to.</p>
 </div>
 <div class="sect1">
 <div class="titlepage"><div><div><h2 class="title" style="clear: both">
-<a name="manual-core.started"></a>2.2. Getting started</h2></div></div></div>
+<a name="manual-core.started"></a>2.2.Â Getting started</h2></div></div></div>
 <p>First off, consider whether it might be beneficial to recompile
 your application and supporting libraries with debugging info enabled
 (the <code class="option">-g</code> option).  Without debugging info, the best
@@ -172,7 +178,7 @@ likely.</p>
 </div>
 <div class="sect1">
 <div class="titlepage"><div><div><h2 class="title" style="clear: both">
-<a name="manual-core.comment"></a>2.3. The Commentary</h2></div></div></div>
+<a name="manual-core.comment"></a>2.3.Â The Commentary</h2></div></div></div>
 <p>Valgrind tools write a commentary, a stream of text, detailing
 error reports and other significant events.  All lines in the commentary
 have following form:
@@ -211,7 +217,7 @@ re-run, passing the <code class="option">-v</code> option to Valgrind.  A second
     specifiers that can be used to use a process ID or an environment
     variable name in the log file name.  These are useful/necessary if your
     program invokes multiple processes (especially for MPI programs).
-    See the <a class="link" href="manual-core.html#manual-core.basicopts" title="2.6.2. Basic Options">basic options section</a>
+    See the <a class="link" href="manual-core.html#manual-core.basicopts" title="2.7.2.Â Basic Options">basic options section</a>
     for more details.</p></li>
 <li class="listitem">
 <p><a name="manual-core.out2socket"></a>The
@@ -282,7 +288,7 @@ further processing, which is why we have chosen this arrangement.</p>
 </div>
 <div class="sect1">
 <div class="titlepage"><div><div><h2 class="title" style="clear: both">
-<a name="manual-core.report"></a>2.4. Reporting of errors</h2></div></div></div>
+<a name="manual-core.report"></a>2.4.Â Reporting of errors</h2></div></div></div>
 <p>When an error-checking tool
 detects something bad happening in the program, an error
 message is written to the commentary.  Here's an example from Memcheck:</p>
@@ -337,7 +343,7 @@ since it may have a bad effect on performance.</p>
 </div>
 <div class="sect1">
 <div class="titlepage"><div><div><h2 class="title" style="clear: both">
-<a name="manual-core.suppress"></a>2.5. Suppressing errors</h2></div></div></div>
+<a name="manual-core.suppress"></a>2.5.Â Suppressing errors</h2></div></div></div>
 <p>The error-checking tools detect numerous problems in the system
 libraries, such as the C library, 
 which come pre-installed with your OS.  You can't easily fix
@@ -351,9 +357,9 @@ or, better, write your own.  Multiple suppression files are allowed.
 This is useful if part of your project contains errors you can't or
 don't want to fix, yet you don't want to continuously be reminded of
 them.</p>
-<p><b>Note: </b>By far the easiest way to add
+<p><b>Note:Â </b>By far the easiest way to add
 suppressions is to use the <code class="option">--gen-suppressions=yes</code> option
-described in <a class="xref" href="manual-core.html#manual-core.options" title="2.6. Core Command-line Options">Core Command-line Options</a>.  This generates
+described in <a class="xref" href="manual-core.html#manual-core.options" title="2.7.Â Core Command-line Options">Core Command-line Options</a>.  This generates
 suppressions automatically.  For best results,
 though, you may want to edit the output
     of  <code class="option">--gen-suppressions=yes</code> by hand, in which
@@ -385,6 +391,9 @@ ask to add suppressions from additional files by specifying
 existing suppressions file whilst reading the following documentation.
 The file <code class="filename">glibc-2.3.supp</code>, in the source
 distribution, provides some good examples.</p>
+<p>Blank and comment lines in a suppression file are ignored.  Comment lines
+  are made of 0 or more blanks followed by a # character followed by some
+  text.</p>
 <p>Each suppression has the following components:</p>
 <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
 <li class="listitem"><p>First line: its name.  This merely gives a handy name to the
@@ -466,7 +475,7 @@ that is called from any function of name matching
 other circumstances.  The string by which this suppression is identified
 to the user is
 <code class="computeroutput">__gconv_transform_ascii_internal/__mbrtowc/mbtowc</code>.</p>
-<p>(See <a class="xref" href="mc-manual.html#mc-manual.suppfiles" title="4.4. Writing suppression files">Writing suppression files</a> for more details
+<p>(See <a class="xref" href="mc-manual.html#mc-manual.suppfiles" title="4.4.Â Writing suppression files">Writing suppression files</a> for more details
 on the specifics of Memcheck's suppression kinds.)</p>
 <p>Another example, again for the Memcheck tool:</p>
 <pre class="programlisting">
@@ -512,17 +521,36 @@ lines in a suppression.</p>
    fun:main
 }
 </pre>
-This suppresses Memcheck memory-leak errors, in the case where
+<p>This suppresses Memcheck memory-leak errors, in the case where
 the allocation was done by <code class="computeroutput">main</code>
 calling (though any number of intermediaries, including zero)
 <code class="computeroutput">ccc</code>,
 calling onwards via
 <code class="computeroutput">ddd</code> and eventually
-to <code class="computeroutput">malloc.</code>.
+to <code class="computeroutput">malloc.</code>.</p>
 </div>
 <div class="sect1">
 <div class="titlepage"><div><div><h2 class="title" style="clear: both">
-<a name="manual-core.options"></a>2.6. Core Command-line Options</h2></div></div></div>
+<a name="manual-core.debuginfod"></a>2.6.Â Debuginfod</h2></div></div></div>
+<p><a name="debuginfod.para.1"></a>Valgrind supports the downloading of debuginfo
+files via debuginfod, an HTTP server for distributing ELF/DWARF debugging
+information. When a debuginfo file cannot be found locally, Valgrind is able
+to query debuginfod servers for the file using the file's build-id.</p>
+<p><a name="debuginfod.para.2"></a>In order to use this feature
+<code class="computeroutput">debuginfod-find</code> must be installed and the
+<code class="computeroutput">$DEBUGINFOD_URLS</code> environment variable must
+contain space-separated URLs of debuginfod servers. Valgrind does not support
+<code class="computeroutput">debuginfod-find</code> verbose output that is
+normally enabled with <code class="computeroutput">$DEBUGINFOD_PROGRESS</code>
+and <code class="computeroutput">$DEBUGINFOD_VERBOSE</code>. These environment
+variables will be ignored. This feature is supported on Linux only.</p>
+<p><a name="debuginfod.para.3"></a>For more information regarding debuginfod, see
+<a class="ulink" href="https://sourceware.org/elfutils/Debuginfod.html" target="_top">Elfutils Debuginfod</a>
+.</p>
+</div>
+<div class="sect1">
+<div class="titlepage"><div><div><h2 class="title" style="clear: both">
+<a name="manual-core.options"></a>2.7.Â Core Command-line Options</h2></div></div></div>
 <p>As mentioned above, Valgrind's core accepts a common set of options.
 The tools also accept tool-specific options, which are documented
 separately for each tool.</p>
@@ -530,7 +558,7 @@ separately for each tool.</p>
 in most cases.  We group the available options by rough categories.</p>
 <div class="sect2">
 <div class="titlepage"><div><div><h3 class="title">
-<a name="manual-core.toolopts"></a>2.6.1. Tool-selection Option</h3></div></div></div>
+<a name="manual-core.toolopts"></a>2.7.1.Â Tool-selection Option</h3></div></div></div>
 <p><a name="tool.opts.para"></a>The single most important option.</p>
 <div class="variablelist">
 <a name="tool.opts.list"></a><dl class="variablelist">
@@ -541,13 +569,13 @@ in most cases.  We group the available options by rough categories.</p>
 </dt>
 <dd><p>Run the Valgrind tool called <code class="varname">toolname</code>,
       e.g. memcheck, cachegrind, callgrind, helgrind, drd, massif,
-      lackey, none, exp-sgcheck, exp-bbv, exp-dhat, etc.</p></dd>
+      dhat, lackey, none, exp-bbv, etc.</p></dd>
 </dl>
 </div>
 </div>
 <div class="sect2">
 <div class="titlepage"><div><div><h3 class="title">
-<a name="manual-core.basicopts"></a>2.6.2. Basic Options</h3></div></div></div>
+<a name="manual-core.basicopts"></a>2.7.2.Â Basic Options</h3></div></div></div>
 <p><a name="basic.opts.para"></a>These options work with all tools.</p>
 <div class="variablelist">
 <a name="basic.opts.list"></a><dl class="variablelist">
@@ -666,14 +694,14 @@ in most cases.  We group the available options by rough categories.</p>
       and debug your program when it runs on Valgrind.
       <code class="option">--vgdb=full</code> incurs significant performance
       overheads, but provides more precise breakpoints and
-      watchpoints. See <a class="xref" href="manual-core-adv.html#manual-core-adv.gdbserver" title="3.2. Debugging your program using Valgrind gdbserver and GDB">Debugging your program using Valgrind's gdbserver and GDB</a> for
+      watchpoints. See <a class="xref" href="manual-core-adv.html#manual-core-adv.gdbserver" title="3.2.Â Debugging your program using Valgrind gdbserver and GDB">Debugging your program using Valgrind's gdbserver and GDB</a> for
       a detailed description.
       </p>
 <p> If the embedded gdbserver is enabled but no gdb is
-      currently being used, the <a class="xref" href="manual-core-adv.html#manual-core-adv.vgdb" title="3.2.9. vgdb command line options">vgdb</a>
+      currently being used, the <a class="xref" href="manual-core-adv.html#manual-core-adv.vgdb" title="3.2.10.Â vgdb command line options">vgdb</a>
       command line utility can send "monitor commands" to Valgrind
       from a shell.  The Valgrind core provides a set of
-      <a class="xref" href="manual-core-adv.html#manual-core-adv.valgrind-monitor-commands" title="3.2.10. Valgrind monitor commands">Valgrind monitor commands</a>. A tool
+      <a class="xref" href="manual-core-adv.html#manual-core-adv.valgrind-monitor-commands" title="3.2.11.Â Valgrind monitor commands">Valgrind monitor commands</a>. A tool
       can optionally provide tool specific monitor commands, which are
       documented in the tool specific chapter.
       </p>
@@ -709,12 +737,15 @@ in most cases.  We group the available options by rough categories.</p>
 <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
 <li class="listitem">
 <p>a comma separated list of one or more of
-            <code class="option">startup exit valgrindabexit</code>.</p>
+            <code class="option">startup exit abexit valgrindabexit</code>.</p>
 <p>The values <code class="option">startup</code> <code class="option">exit</code>
-          <code class="option">valgrindabexit</code> respectively indicate to
-          invoke gdbserver before your program is executed, after the
-          last instruction of your program, on Valgrind abnormal exit
-          (e.g. internal error, out of memory, ...).</p>
+          <code class="option">valgrindabexit</code> respectively indicate to invoke
+          gdbserver before your program is executed, after the last instruction
+          of your program, on Valgrind abnormal exit (e.g. internal error, out
+          of memory, ...).</p>
+<p>The option <code class="option">abexit</code> is similar to <code class="option">exit</code>
+          but tells to invoke gdbserver only when your application exits abnormally
+          (i.e. with an exit code different of 0). </p>
 <p>Note: <code class="option">startup</code> and
           <code class="option">--vgdb-error=0</code> will both cause Valgrind
           gdbserver to be invoked before your program is executed. The
@@ -723,13 +754,13 @@ in most cases.  We group the available options by rough categories.</p>
 </li>
 <li class="listitem"><p><code class="option">all</code> to specify the complete set.
             It is equivalent to
-            <code class="option">--vgdb-stop-at=startup,exit,valgrindabexit</code>.</p></li>
+            <code class="option">--vgdb-stop-at=startup,exit,abexit,valgrindabexit</code>.</p></li>
 <li class="listitem"><p><code class="option">none</code> for the empty set.</p></li>
 </ul></div>
 </dd>
 <dt>
 <a name="opt.track-fds"></a><span class="term">
-      <code class="option">--track-fds=&lt;yes|no&gt; [default: no] </code>
+      <code class="option">--track-fds=&lt;yes|no|all&gt; [default: no] </code>
     </span>
 </dt>
 <dd><p>When enabled, Valgrind will print out a list of open file
@@ -737,7 +768,18 @@ in most cases.  We group the available options by rough categories.</p>
       command <code class="varname">v.info open_fds</code>.  Along with each
       file descriptor is printed a stack backtrace of where the file
       was opened and any details relating to the file descriptor such
-      as the file name or socket details.</p></dd>
+      as the file name or socket details. Use <code class="option">all</code> to
+      include reporting on <code class="computeroutput">stdin</code>,
+      <code class="computeroutput">stdout</code> and
+      <code class="computeroutput">stderr</code>.</p></dd>
+<dt>
+<a name="opt.modify-fds"></a><span class="term">
+      <code class="option">--modify-fds=&lt;no|high&gt; [default: no] </code>
+    </span>
+</dt>
+<dd><p>When enabled, when the program opens a new file descriptor,
+      the highest available file descriptor is returned instead of the
+      lowest one.</p></dd>
 <dt>
 <a name="opt.time-stamp"></a><span class="term">
       <code class="option">--time-stamp=&lt;yes|no&gt; [default: no] </code>
@@ -817,14 +859,24 @@ in most cases.  We group the available options by rough categories.</p>
       be used in conjunction with the
       <code class="computeroutput">valgrind-listener</code> program.  For
       further details, see 
-      <a class="link" href="manual-core.html#manual-core.comment" title="2.3. The Commentary">the commentary</a>
+      <a class="link" href="manual-core.html#manual-core.comment" title="2.3.Â The Commentary">the commentary</a>
       in the manual.</p></dd>
+<dt>
+<a name="opt.enable-debuginfod"></a><span class="term">
+      <code class="option">--enable-debuginfod=&lt;no|yes&gt; [default: yes] </code>
+    </span>
+</dt>
+<dd><p>When enabled Valgrind will attempt to download missing debuginfo
+      from debuginfod servers if space-separated server URLs are present
+      in the <code class="computeroutput">$DEBUGINFOD_URLS</code> environment
+      variable.  This option is supported on Linux only.
+      </p></dd>
 </dl>
 </div>
 </div>
 <div class="sect2">
 <div class="titlepage"><div><div><h3 class="title">
-<a name="manual-core.erropts"></a>2.6.3. Error-related Options</h3></div></div></div>
+<a name="manual-core.erropts"></a>2.7.3.Â Error-related Options</h3></div></div></div>
 <p><a name="error-related.opts.para"></a>These options are used by all tools
 that can report errors, e.g. Memcheck, but not Cachegrind.</p>
 <div class="variablelist">
@@ -850,8 +902,8 @@ that can report errors, e.g. Memcheck, but not Cachegrind.</p>
       </p>
 <p>This option is aimed at making life easier for tools that consume
       Valgrind's output as input, such as GUI front ends.  Currently this
-      option works with Memcheck, Helgrind, DRD and SGcheck.  The output
-      format is specified in the file
+      option works with Memcheck, Helgrind and DRD.  The output format is
+      specified in the file
       <code class="computeroutput">docs/internals/xml-output-protocol4.txt</code>
       in the source tree for Valgrind 3.5.0 or later.</p>
 <p>The recommended options for a GUI to pass, when requesting
@@ -913,10 +965,14 @@ that can report errors, e.g. Memcheck, but not Cachegrind.</p>
     </span>
 </dt>
 <dd>
-<p>Enable/disable automatic demangling (decoding) of C++ names.
+<p>Enable/disable automatic demangling (decoding) of C++, D,
+      Rust, Java, Ada names.
       Enabled by default.  When enabled, Valgrind will attempt to
-      translate encoded C++ names back to something approaching the
-      original.  The demangler handles symbols mangled by g++ versions
+      translate encoded names in the listed languages back to something
+      approaching the original.
+      Note that the callgrind tool always disables Ada demangling in order
+      to differentiate overloaded functions and procedures in the callgraph.
+      The demangler handles symbols mangled by g++ versions
       2.X, 3.X and 4.X.</p>
 <p>An important fact about demangling is that function names
       mentioned in suppressions files should be in their mangled form.
@@ -1015,7 +1071,11 @@ that can report errors, e.g. Memcheck, but not Cachegrind.</p>
       that value is returned instead, if Valgrind detects any errors.
       This is useful for using Valgrind as part of an automated test
       suite, since it makes it easy to detect test cases for which
-      Valgrind has reported errors, just by inspecting return codes.</p></dd>
+      Valgrind has reported errors, just by inspecting return codes.
+      When set to a nonzero value and Valgrind detects no error,
+      the return value of Valgrind will be the return value of the
+      program being simulated.
+      </p></dd>
 <dt>
 <a name="opt.exit-on-first-error"></a><span class="term">
       <code class="option">--exit-on-first-error=&lt;yes|no&gt; [default: no] </code>
@@ -1042,6 +1102,30 @@ that can report errors, e.g. Memcheck, but not Cachegrind.</p>
 <p> Note that empty markers are accepted. So, only using a begin
       (or an end) marker is possible.</p>
 </dd>
+<dt>
+<a name="opt.show-error-list"></a><span class="term">
+      <code class="option">--show-error-list=no|yes|all [default: no]</code>
+    </span>
+</dt>
+<dd>
+<p>If this option is yes, for tools that report errors, valgrind
+        will show the list of detected errors and the list of used suppressions
+        at exit. The value all indicates to also show the list of suppressed
+        errors.
+      </p>
+<p>Note that at verbosity 2 and above, valgrind automatically shows
+        the list of detected errors and the list of used suppressions
+        at exit, unless  <code class="option">--show-error-list=no</code> is selected.
+      </p>
+</dd>
+<dt>
+<a name="opt.s"></a><span class="term">
+      <code class="option">-s</code>
+    </span>
+</dt>
+<dd><p>Specifying <code class="option">-s</code> is equivalent to
+        <code class="option">--show-error-list=yes</code>.
+      </p></dd>
 <dt>
 <a name="opt.sigill-diagnostics"></a><span class="term">
       <code class="option">--sigill-diagnostics=&lt;yes|no&gt; [default: yes] </code>
@@ -1224,6 +1308,8 @@ that can report errors, e.g. Memcheck, but not Cachegrind.</p>
       you want to use it, you will have to recompile it by hand using
       the command shown at the top
       of <code class="computeroutput">auxprogs/valgrind-di-server.c</code>.</p>
+<p>Valgrind can also download debuginfo via debuginfod. See the
+      DEBUGINFOD section for more information.</p>
 </dd>
 <dt>
 <a name="opt.allow-mismatched-debuginfo"></a><span class="term">
@@ -1262,7 +1348,7 @@ that can report errors, e.g. Memcheck, but not Cachegrind.</p>
 <p>When set to <code class="varname">yes</code>, Valgrind will pause
       after every error shown and print the line:
       </p>
-<div class="literallayout"><p><code class="computeroutput">    ---- Print suppression ? --- [Return/N/n/Y/y/C/c] ----</code></p></div>
+<div class="literallayout"><p><code class="computeroutput">Â Â Â Â ----Â PrintÂ suppressionÂ ?Â ---Â [Return/N/n/Y/y/C/c]Â ----</code></p></div>
 <p>
 
       Pressing <code class="varname">Ret</code>, or <code class="varname">N Ret</code> or
@@ -1315,8 +1401,8 @@ that can report errors, e.g. Memcheck, but not Cachegrind.</p>
 </dt>
 <dd>
 <p>This option is only relevant when running Valgrind on
-      Mac OS X.</p>
-<p>Mac OS X uses a deferred debug information (debuginfo)
+      macOS.</p>
+<p>macOS uses a deferred debug information (debuginfo)
       linking scheme.  When object files containing debuginfo are
       linked into a <code class="computeroutput">.dylib</code> or an
       executable, the debuginfo is not copied into the final file.
@@ -1453,12 +1539,36 @@ that can report errors, e.g. Memcheck, but not Cachegrind.</p>
       provide a different limit. E.g.
       <code class="computeroutput">--max-threads=3000</code>.
       </p></dd>
+<dt>
+<a name="opt.realloc-zero-bytes-frees"></a><span class="term">
+      <code class="option">--realloc-zero-bytes-frees=yes|no [default: yes for glibc no otherwise] </code>
+    </span>
+</dt>
+<dd>
+<p>The behaviour of <code class="computeroutput">realloc()</code> with a size
+      of zero is implementation defined in C17 and undefined in C23.
+      Valgrind tries to work in the same way as the
+      underlying system and C runtime library that it was configured and built on.
+      However, if you use a different C runtime library then this default may be wrong.
+      If the value is <code class="option">yes</code> then <code class="varname">realloc</code> will
+      deallocate the memory and return NULL. If the value is <code class="option">no</code> then
+      <code class="varname">realloc</code> will not deallocate the memory and
+      the size will be handled as though it were one byte.</p>
+<p>As an example, if you use Valgrind installed via a package on a
+      Linux distro using GNU libc but link your test executable with musl libc or
+      the JEMalloc library then consider using
+      <code class="computeroutput">--realloc-zero-bytes-frees=no</code>.
+      </p>
+<p>Address Sanitizer has a similar and even wordier option
+      <code class="computeroutput">allocator_frees_and_returns_null_on_realloc_zero</code>.
+      </p>
+</dd>
 </dl>
 </div>
 </div>
 <div class="sect2">
 <div class="titlepage"><div><div><h3 class="title">
-<a name="manual-core.mallocopts"></a>2.6.4. malloc-related Options</h3></div></div></div>
+<a name="manual-core.mallocopts"></a>2.7.4.Â malloc-related Options</h3></div></div></div>
 <p><a name="malloc-related.opts.para"></a>For tools that use their own version of
 <code class="computeroutput">malloc</code> (e.g. Memcheck,
 Massif, Helgrind, DRD), the following options apply.</p>
@@ -1505,7 +1615,7 @@ Massif, Helgrind, DRD), the following options apply.</p>
 <p> Tools replacing Valgrind's <code class="function">malloc,
       realloc,</code> etc, can optionally produce an execution
       tree detailing which piece of code is responsible for heap
-      memory usage. See <a class="xref" href="manual-core.html#manual-core.xtree" title="2.9. Execution Trees">Execution Trees</a>
+      memory usage. See <a class="xref" href="manual-core.html#manual-core.xtree" title="2.10.Â Execution Trees">Execution Trees</a>
       for a detailed explanation about execution trees. </p>
 <p> When set to <code class="varname">none</code>, no memory execution
       tree is produced.</p>
@@ -1555,7 +1665,7 @@ Massif, Helgrind, DRD), the following options apply.</p>
         If the filename contains the extension  <code class="option">.kcg</code>
         or no extension is provided or recognised,
         then the produced file format will be a callgrind output format.</p>
-<p>See <a class="xref" href="manual-core.html#manual-core.xtree" title="2.9. Execution Trees">Execution Trees</a>
+<p>See <a class="xref" href="manual-core.html#manual-core.xtree" title="2.10.Â Execution Trees">Execution Trees</a>
       for a detailed explanation about execution trees formats. </p>
 </dd>
 </dl>
@@ -1563,7 +1673,7 @@ Massif, Helgrind, DRD), the following options apply.</p>
 </div>
 <div class="sect2">
 <div class="titlepage"><div><div><h3 class="title">
-<a name="manual-core.rareopts"></a>2.6.5. Uncommon Options</h3></div></div></div>
+<a name="manual-core.rareopts"></a>2.7.5.Â Uncommon Options</h3></div></div></div>
 <p><a name="uncommon.opts.para"></a>These options apply to all tools, as they
 affect certain obscure workings of the Valgrind core.  Most people won't
 need to use them.</p>
@@ -1634,10 +1744,10 @@ need to use them.</p>
       function calls from DWARF3 debug info.  This slows Valgrind
       startup and makes it use more memory (typically for each inlined
       piece of code, 6 words and space for the function name), but it
-      results in more descriptive stacktraces.  For the 3.10.0
-      release, this functionality is enabled by default only for Linux,
-      Android and Solaris targets and only for the tools Memcheck, Helgrind
-      and DRD.  Here is an example of some stacktraces with
+      results in more descriptive stacktraces.  Currently,
+      this functionality is enabled by default only for Linux, FreeBSD,
+      Android and Solaris targets and only for the tools Memcheck, Massif,
+      Helgrind and DRD.  Here is an example of some stacktraces with
       <code class="option">--read-inline-info=no</code>:
 </p>
 <pre class="programlisting">
@@ -1752,11 +1862,12 @@ need to use them.</p>
     </span>
 </dt>
 <dd>
-<p>This option is only relevant when running Valgrind on Linux.</p>
+<p>This option is only relevant when running Valgrind on Linux with
+      GNU libc.</p>
 <p>The GNU C library (<code class="function">libc.so</code>), which is
       used by all programs, may allocate memory for its own uses.
       Usually it doesn't bother to free that memory when the program
-      ends&#8212;there would be no point, since the Linux kernel reclaims
+      endsâ€”there would be no point, since the Linux kernel reclaims
       all process resources when a process exits anyway, so it would
       just slow things down.</p>
 <p>The glibc authors realised that this behaviour causes leak
@@ -1782,12 +1893,12 @@ need to use them.</p>
     </span>
 </dt>
 <dd>
-<p>This option is only relevant when running Valgrind on Linux
-            or Solaris C++ programs.</p>
+<p>This option is only relevant when running Valgrind on Linux,
+      FreeBSD or Solaris C++ programs using libstdc++.</p>
 <p>The GNU Standard C++ library (<code class="function">libstdc++.so</code>),
       which is used by all C++ programs compiled with g++, may allocate memory
       for its own uses. Usually it doesn't bother to free that memory when
-      the program ends&#8212;there would be no point, since the kernel reclaims
+      the program endsâ€”there would be no point, since the kernel reclaims
       all process resources when a process exits anyway, so it would
       just slow things down.</p>
 <p>The gcc authors realised that this behaviour causes leak
@@ -1840,7 +1951,7 @@ need to use them.</p>
 <li class="listitem">
 <p><code class="option">no-nptl-pthread-stackcache: </code>
             This hint is only relevant when running Valgrind on Linux;
-            it is ignored on Solaris and Mac OS X.</p>
+            it is ignored on FreeBSD, Solaris and macOS.</p>
 <p>The GNU glibc pthread library
             (<code class="function">libpthread.so</code>), which is used by
             pthread programs, maintains a cache of pthread stacks.
@@ -1909,6 +2020,20 @@ need to use them.</p>
 </ul></div>
 </dd>
 <dt>
+<a name="opt.scheduling-quantum"></a><span class="term">
+      <code class="option">--scheduling-quantum=&lt;number&gt;   [default: 100000] </code>
+    </span>
+</dt>
+<dd><p>The <code class="option">--scheduling-quantum</code> option controls
+      the maximum number of basic blocks executed by a thread before releasing
+      the lock used by Valgrind to serialise thread execution.  Smaller values
+      give finer interleaving but increases the scheduling overhead. Finer
+      interleaving can be useful to reproduce race conditions with helgrind or
+      DRD.  For more details about the Valgrind thread serialisation scheme and
+      its impact on performance and thread scheduling, see
+      <a class="xref" href="manual-core.html#manual-core.pthreads_perf_sched" title="2.8.1.Â Scheduling and Multi-Thread Performance">Scheduling and Multi-Thread Performance</a>.
+      </p></dd>
+<dt>
 <a name="opt.fair-sched"></a><span class="term">
       <code class="option">--fair-sched=&lt;no|yes|try&gt;    [default: no] </code>
     </span>
@@ -1921,7 +2046,7 @@ need to use them.</p>
       between fairness and performance. For more details about the
       Valgrind thread serialisation scheme and its impact on
       performance and thread scheduling, see
-      <a class="xref" href="manual-core.html#manual-core.pthreads_perf_sched" title="2.7.1. Scheduling and Multi-Thread Performance">Scheduling and Multi-Thread Performance</a>.</p>
+      <a class="xref" href="manual-core.html#manual-core.pthreads_perf_sched" title="2.8.1.Â Scheduling and Multi-Thread Performance">Scheduling and Multi-Thread Performance</a>.</p>
 <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
 <li class="listitem">
 <p>The value <code class="option">--fair-sched=yes</code>
@@ -2194,7 +2319,7 @@ need to use them.</p>
       malloc related functions, using the
       synonym <code class="varname">somalloc</code>.  This synonym is usable for
       all tools doing standard replacement of malloc related functions
-      (e.g. memcheck, massif, drd, helgrind, exp-dhat, exp-sgcheck).
+      (e.g. memcheck, helgrind, drd, massif, dhat).
       </p>
 <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
 <li class="listitem">
@@ -2221,10 +2346,6 @@ need to use them.</p>
           option <code class="option">--soname-synonyms=somalloc=NONE</code>.
           Note that a NONE pattern will match the main executable and
           any shared library having no soname. </p></li>
-<li class="listitem"><p>To run a "default" Firefox build for Linux, in which
-          JEMalloc is linked in to the main executable,
-          use <code class="option">--soname-synonyms=somalloc=NONE</code>.
-          </p></li>
 <li class="listitem"><p>To only intercept allocation symbols in the default
 	  system libraries, but not in any other shared library or the
 	  executable defining public malloc or operator new related
@@ -2264,44 +2385,37 @@ PROGRESS: U 130s, W 134s, 97.0% CPU, EvC 574.90M, TIn 657.5k, TOut 3.0k, #thr 63
         Each line shows:
       </p>
 <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
-<li class="listitem">
-<code class="varname">U</code>: total user time</li>
-<li class="listitem">
-<code class="varname">W</code>: total wallclock time</li>
-<li class="listitem">
-<code class="varname">CPU</code>: overall average cpu use</li>
-<li class="listitem">
-<code class="varname">EvC</code>: number of event checks.  An event
+<li class="listitem"><p><code class="varname">U</code>: total user time</p></li>
+<li class="listitem"><p><code class="varname">W</code>: total wallclock time</p></li>
+<li class="listitem"><p><code class="varname">CPU</code>: overall average cpu use</p></li>
+<li class="listitem"><p><code class="varname">EvC</code>: number of event checks.  An event
          check is a backwards branch in the simulated program, so this is a
-         measure of forward progress of the program</li>
-<li class="listitem">
-<code class="varname">TIn</code>: number of code blocks instrumented
-          by the JIT</li>
-<li class="listitem">
-<code class="varname">TOut</code>: number of instrumented code
-          blocks that have been thrown away</li>
-<li class="listitem">
-<code class="varname">#thr</code>: number of threads in the
-        program</li>
+         measure of forward progress of the program</p></li>
+<li class="listitem"><p><code class="varname">TIn</code>: number of code blocks instrumented
+          by the JIT</p></li>
+<li class="listitem"><p><code class="varname">TOut</code>: number of instrumented code
+          blocks that have been thrown away</p></li>
+<li class="listitem"><p><code class="varname">#thr</code>: number of threads in the
+        program</p></li>
 </ul></div>
 <p>
       From the progress of these, it is possible to observe:
       </p>
 <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
-<li class="listitem">when the program is compute bound (<code class="varname">TIn</code>
-          rises slowly, <code class="varname">EvC</code> rises rapidly)</li>
-<li class="listitem">when the program is in a spinloop
+<li class="listitem"><p>when the program is compute bound (<code class="varname">TIn</code>
+          rises slowly, <code class="varname">EvC</code> rises rapidly)</p></li>
+<li class="listitem"><p>when the program is in a spinloop
           (<code class="varname">TIn</code>/<code class="varname">TOut</code>
-          fixed, <code class="varname">EvC</code> rises rapidly)</li>
-<li class="listitem">when the program is JIT-bound (<code class="varname">TIn</code>
-          rises rapidly)</li>
-<li class="listitem">when the program is rapidly discarding code
-          (<code class="varname">TOut</code> rises rapidly)</li>
-<li class="listitem">when the program is about to achieve some expected state
+          fixed, <code class="varname">EvC</code> rises rapidly)</p></li>
+<li class="listitem"><p>when the program is JIT-bound (<code class="varname">TIn</code>
+          rises rapidly)</p></li>
+<li class="listitem"><p>when the program is rapidly discarding code
+          (<code class="varname">TOut</code> rises rapidly)</p></li>
+<li class="listitem"><p>when the program is about to achieve some expected state
           (<code class="varname">EvC</code> arrives at some value you
-          expect)</li>
-<li class="listitem"> when the program is idling (<code class="varname">U</code> rises
-          more slowly than <code class="varname">W</code>)</li>
+          expect)</p></li>
+<li class="listitem"><p> when the program is idling (<code class="varname">U</code> rises
+          more slowly than <code class="varname">W</code>)</p></li>
 </ul></div>
 <p>
       </p>
@@ -2311,7 +2425,7 @@ PROGRESS: U 130s, W 134s, 97.0% CPU, EvC 574.90M, TIn 657.5k, TOut 3.0k, #thr 63
 </div>
 <div class="sect2">
 <div class="titlepage"><div><div><h3 class="title">
-<a name="manual-core.debugopts"></a>2.6.6. Debugging Options</h3></div></div></div>
+<a name="manual-core.debugopts"></a>2.7.6.Â Debugging Options</h3></div></div></div>
 <p><a name="debug.opts.para"></a>There are also some options for debugging
 Valgrind itself.  You shouldn't need to use them in the normal run of
 things.  If you wish to see the list, use the
@@ -2323,7 +2437,7 @@ Valgrind itself, then you should use the options
 </div>
 <div class="sect2">
 <div class="titlepage"><div><div><h3 class="title">
-<a name="manual-core.defopts"></a>2.6.7. Setting Default Options</h3></div></div></div>
+<a name="manual-core.defopts"></a>2.7.7.Â Setting Default Options</h3></div></div></div>
 <p>Note that Valgrind also reads options from three places:</p>
 <div class="orderedlist"><ol class="orderedlist" type="1">
 <li class="listitem"><p>The file <code class="computeroutput">~/.valgrindrc</code></p></li>
@@ -2359,10 +2473,69 @@ part, this will cause problems if you select other tools that
 don't understand
 <code class="option">--leak-check=yes</code>.</p>
 </div>
+<div class="sect2">
+<div class="titlepage"><div><div><h3 class="title">
+<a name="manual-core.dynopts"></a>2.7.8.Â Dynamically Changing Options</h3></div></div></div>
+<p>The value of some command line options can be changed dynamically
+  while your program is running under Valgrind.</p>
+<p>The dynamically changeable options of the valgrind core and a given
+  tool can be listed using option
+  <code class="computeroutput">--help-dyn-options</code>, for example:</p>
+<pre class="screen">
+$ valgrind --tool=memcheck --help-dyn-options
+  dynamically changeable options:
+    -v -q -d --stats --vgdb=no --vgdb=yes --vgdb=full --vgdb-poll --vgdb-error
+    --vgdb-stop-at --error-markers --show-error-list -s --show-below-main
+    --time-stamp --trace-children --child-silent-after-fork --trace-sched
+    --trace-signals --trace-symtab --trace-cfi --debug-dump=syms
+    --debug-dump=line --debug-dump=frames --trace-redir --trace-syscalls
+    --sym-offsets --progress-interval --merge-recursive-frames
+    --vex-iropt-verbosity --suppressions --trace-flags --trace-notbelow
+    --trace-notabove --profile-flags --gen-suppressions=no
+    --gen-suppressions=yes --gen-suppressions=all --errors-for-leak-kinds
+    --show-leak-kinds --leak-check-heuristics --show-reachable
+    --show-possibly-lost --freelist-vol --freelist-big-blocks --leak-check=no
+    --leak-check=summary --leak-check=yes --leak-check=full --ignore-ranges
+    --ignore-range-below-sp --show-mismatched-frees
+valgrind: Use --help for more information.
+$</pre>
+<p>The dynamic options can be changed the following ways:</p>
+<div class="orderedlist"><ol class="orderedlist" type="1">
+<li class="listitem">
+<p>From the shell, using vgdb and the monitor command
+     <code class="computeroutput">v.clo</code>:</p>
+<pre class="screen">
+$ vgdb "v.clo --trace-children=yes --child-silent-after-fork=no"
+sending command v.clo --trace-children=yes --child-silent-after-fork=no to pid 4404
+$</pre>
+<p>Note: you must use double quotes around the monitor command to avoid
+  vgdb interpreting the valgrind options as its own options.</p>
+</li>
+<li class="listitem">
+<p>From gdb, using the monitor command
+     <code class="computeroutput">v.clo</code>:</p>
+<pre class="screen">
+(gdb) monitor v.clo --trace-children=yes --child-silent-after-fork=no
+(gdb) </pre>
+</li>
+<li class="listitem">
+<p>From your program, using the client request
+       <code class="computeroutput">VALGRIND_CLO_CHANGE(option)</code>:</p>
+<pre class="screen">
+      VALGRIND_CLO_CHANGE ("--trace-children=yes");
+      VALGRIND_CLO_CHANGE ("--child-silent-after-fork=no");</pre>
+</li>
+</ol></div>
+<p>Dynamically changeable options can be used in various circumstances,
+    such as changing the valgrind behaviour during execution, loading
+    suppression files as part of shared library initialisation, change or
+    set valgrind options in child processes, ...
+  </p>
+</div>
 </div>
 <div class="sect1">
 <div class="titlepage"><div><div><h2 class="title" style="clear: both">
-<a name="manual-core.pthreads"></a>2.7. Support for Threads</h2></div></div></div>
+<a name="manual-core.pthreads"></a>2.8.Â Support for Threads</h2></div></div></div>
 <p>Threaded programs are fully supported.</p>
 <p>The main thing to point out with respect to threaded programs is
 that your program will use the native threading library, but Valgrind
@@ -2391,7 +2564,7 @@ sharing will fail.
 </p>
 <div class="sect2">
 <div class="titlepage"><div><div><h3 class="title">
-<a name="manual-core.pthreads_perf_sched"></a>2.7.1. Scheduling and Multi-Thread Performance</h3></div></div></div>
+<a name="manual-core.pthreads_perf_sched"></a>2.8.1.Â Scheduling and Multi-Thread Performance</h3></div></div></div>
 <p>A thread executes code only when it holds the abovementioned
 lock.  After executing some number of instructions, the running thread
 will release the lock.  All threads ready to run will then compete to
@@ -2471,7 +2644,7 @@ setting so long as any thread of the program has work to do.
 </div>
 <div class="sect1">
 <div class="titlepage"><div><div><h2 class="title" style="clear: both">
-<a name="manual-core.signals"></a>2.8. Handling of Signals</h2></div></div></div>
+<a name="manual-core.signals"></a>2.9.Â Handling of Signals</h2></div></div></div>
 <p>Valgrind has a fairly complete signal implementation.  It should be
 able to cope with any POSIX-compliant use of signals.</p>
 <p>If you're using signals in clever ways (for example, catching
@@ -2492,7 +2665,7 @@ will create a core dump in the usual way.</p>
 </div>
 <div class="sect1">
 <div class="titlepage"><div><div><h2 class="title" style="clear: both">
-<a name="manual-core.xtree"></a>2.9. Execution Trees</h2></div></div></div>
+<a name="manual-core.xtree"></a>2.10.Â Execution Trees</h2></div></div></div>
 <p>An execution tree (xtree) is made of a set of stack traces, each
   stack trace is associated with some resource consumptions or event
   counts.  Depending on the xtree, different event counts/resource
@@ -2507,7 +2680,7 @@ will create a core dump in the usual way.</p>
   allocated indirectly via a call to function f1 and 140 bytes
   indirectly allocated via a call to function f2. f2 has allocated
   memory by calling g2, while f1 has allocated memory by calling g11
-  and g12. g11, g12 and g1 have directly called a memory allocation
+  and g12. g11, g12 and g2 have directly called a memory allocation
   function (malloc), and so have a non zero 'Self' value. Note that when
   kcachegrind shows an xtree, the 'Called' column and call nr indications in
   the Call Graph are not significant (always set to 0 or 1, independently
@@ -2518,7 +2691,7 @@ will create a core dump in the usual way.</p>
   execution when required using the
   option <code class="option">--xtree-memory</code>.  It can also be produced on
   demand using the <code class="option">xtmemory</code> monitor command (see
-  <a class="xref" href="manual-core-adv.html#manual-core-adv.valgrind-monitor-commands" title="3.2.10. Valgrind monitor commands">Valgrind monitor commands</a>). Currently,
+  <a class="xref" href="manual-core-adv.html#manual-core-adv.valgrind-monitor-commands" title="3.2.11.Â Valgrind monitor commands">Valgrind monitor commands</a>). Currently,
   an xtree heap memory report can be produced by
   the <code class="option">memcheck</code>, <code class="option">helgrind</code>
   and <code class="option">massif</code> tools.</p>
@@ -2555,7 +2728,7 @@ the "Massif Format".</p>
 <p>An xtree file in the Callgrind Format contains a single callgraph,
       associating each stack trace with the values recorded
       in the xtree. </p>
-<p>Different Callgrind Format file visualisers are available:</p>
+<p>Different Callgrind Format file visualizers are available:</p>
 <p>Valgrind distribution includes the <code class="option">callgrind_annotate</code>
       command line utility that reads in the xtree data, and prints a sorted
       lists of functions, optionally with source annotation. Note that due to
@@ -2565,6 +2738,9 @@ the "Massif Format".</p>
       <a class="ulink" href="https://kcachegrind.github.io/html/Home.html" target="_top">KCachegrind</a>, which is a KDE/Qt based
       GUI that makes it easy to navigate the large amount of data that
       an xtree can contain.</p>
+<p>Note that xtree Callgrind Format does not make use of the inline
+      information even when specifying <code class="option">--read-inline-info=yes</code>.
+    </p>
 </li>
 <li class="listitem">
 <p>Massif Format</p>
@@ -2575,18 +2751,21 @@ the "Massif Format".</p>
       and <code class="option">curBk</code>),
       while <code class="option">--xtree-memory=full</code> will give a file
       with 6 detailed trees.</p>
-<p>Different Massif Format file visualisers are available. Valgrind
+<p>Different Massif Format file visualizers are available. Valgrind
       distribution includes the <code class="option">ms_print</code>
       command line utility that produces an easy to read reprentation of
-      a massif output file. See <a class="xref" href="ms-manual.html#ms-manual.running-massif" title="9.2.2. Running Massif">Running Massif</a> and
-      <a class="xref" href="ms-manual.html#ms-manual.using" title="9.2. Using Massif and ms_print">Using Massif and ms_print</a> for more details
+      a massif output file. See <a class="xref" href="ms-manual.html#ms-manual.using-print" title="9.2.Â Using Massif and ms_print">Using Massif and ms_print</a> and
+      <a class="xref" href="ms-manual.html#ms-manual.using-visualizer" title="9.3.Â Using massif-visualizer">Using massif-visualizer</a> for more details
       about visualising Massif Format output files.</p>
+<p>Note that xtree Massif Format makes use of the inline
+      information when specifying <code class="option">--read-inline-info=yes</code>.
+    </p>
 </li>
 </ul></div>
 <p>Note that for equivalent information, the Callgrind Format is more compact
   than the Massif Format.  However, the Callgrind Format always contains the
   full data: there is no filtering done during file production, filtering is
-  done by visualisers such as kcachegrind. kcachegrind is particularly easy to
+  done by visualizers such as kcachegrind. kcachegrind is particularly easy to
   use to analyse big xtree data containing multiple events counts or resources
   consumption.  The Massif Format (optionally) only contains a part of the data.
   For example, the Massif tool might filter some of the data, according to the
@@ -2685,13 +2864,13 @@ curB curBk totB totBk totFdB totFdBk
   and frees a lot of blocks : the total foot print of the program might
   not reflect the fact that the same memory was over and over allocated
   then released.</p>
-<p>Finally, Xtree visualisers such as kcachegrind are helping to
+<p>Finally, Xtree visualizers such as kcachegrind are helping to
   identify big memory consumers, in order to possibly optimise the
   amount of memory needed by your program.</p>
 </div>
 <div class="sect1">
 <div class="titlepage"><div><div><h2 class="title" style="clear: both">
-<a name="manual-core.install"></a>2.10. Building and Installing Valgrind</h2></div></div></div>
+<a name="manual-core.install"></a>2.11.Â Building and Installing Valgrind</h2></div></div></div>
 <p>We use the standard Unix
 <code class="computeroutput">./configure</code>,
 <code class="computeroutput">make</code>, <code class="computeroutput">make
@@ -2738,16 +2917,16 @@ for them, but instead the test checks the server version.  This
 is just plain wrong.</p>
 <p>If you are building a binary package of Valgrind for
 distribution, please read <code class="literal">README_PACKAGERS</code>
-<a class="xref" href="dist.readme-packagers.html" title="7. README_PACKAGERS">Readme Packagers</a>.  It contains some
+<a class="xref" href="dist.readme-packagers.html" title="7.Â README_PACKAGERS">Readme Packagers</a>.  It contains some
 important information.</p>
 <p>Apart from that, there's not much excitement here.  Let us
 know if you have build problems.</p>
 </div>
 <div class="sect1">
 <div class="titlepage"><div><div><h2 class="title" style="clear: both">
-<a name="manual-core.problems"></a>2.11. If You Have Problems</h2></div></div></div>
+<a name="manual-core.problems"></a>2.12.Â If You Have Problems</h2></div></div></div>
 <p>Contact us at <a class="ulink" href="http://www.valgrind.org/" target="_top">http://www.valgrind.org/</a>.</p>
-<p>See <a class="xref" href="manual-core.html#manual-core.limits" title="2.12. Limitations">Limitations</a> for the known
+<p>See <a class="xref" href="manual-core.html#manual-core.limits" title="2.13.Â Limitations">Limitations</a> for the known
 limitations of Valgrind, and for a list of programs which are
 known not to work on it.</p>
 <p>All parts of the system make heavy use of assertions and 
@@ -2763,7 +2942,7 @@ crashes, etc.</p>
 </div>
 <div class="sect1">
 <div class="titlepage"><div><div><h2 class="title" style="clear: both">
-<a name="manual-core.limits"></a>2.12. Limitations</h2></div></div></div>
+<a name="manual-core.limits"></a>2.13.Â Limitations</h2></div></div></div>
 <p>The following list of limitations seems long.  However, most
 programs actually work fine.</p>
 <p>Valgrind will run programs on the supported platforms
@@ -2804,7 +2983,7 @@ subject to the following constraints:</p>
    using malloc/new/free/delete, it should still work, but Memcheck's
    error checking won't be so effective.  If you describe your
    program's memory management scheme using "client requests" (see
-   <a class="xref" href="manual-core-adv.html#manual-core-adv.clientreq" title="3.1. The Client Request mechanism">The Client Request mechanism</a>), Memcheck can do
+   <a class="xref" href="manual-core-adv.html#manual-core-adv.clientreq" title="3.1.Â The Client Request mechanism">The Client Request mechanism</a>), Memcheck can do
    better.  Nevertheless, using malloc/new and free/delete is still
    the best approach.</p></li>
 <li class="listitem"><p>Valgrind's signal simulation is not as robust as it could be.
@@ -2952,7 +3131,7 @@ subject to the following constraints:</p>
 </div>
 <div class="sect1">
 <div class="titlepage"><div><div><h2 class="title" style="clear: both">
-<a name="manual-core.example"></a>2.13. An Example Run</h2></div></div></div>
+<a name="manual-core.example"></a>2.14.Â An Example Run</h2></div></div></div>
 <p>This is the log for a run of a small program using Memcheck.
 The program is in fact correct, and the reported error is as the
 result of a potentially serious code generation bug in GNU g++
@@ -2986,7 +3165,7 @@ shipped.</p>
 </div>
 <div class="sect1">
 <div class="titlepage"><div><div><h2 class="title" style="clear: both">
-<a name="manual-core.warnings"></a>2.14. Warning Messages You Might See</h2></div></div></div>
+<a name="manual-core.warnings"></a>2.15.Â Warning Messages You Might See</h2></div></div></div>
 <p>Some of these only appear if you run in verbose mode
 (enabled by <code class="option">-v</code>):</p>
 <div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
@@ -3059,9 +3238,9 @@ shipped.</p>
 <br><table class="nav" width="100%" cellspacing="3" cellpadding="2" border="0" summary="Navigation footer">
 <tr>
 <td rowspan="2" width="40%" align="left">
-<a accesskey="p" href="manual-intro.html">&lt;&lt; 1. Introduction</a> </td>
+<a accesskey="p" href="manual-intro.html">&lt;&lt;Â 1.Â Introduction</a>Â </td>
 <td width="20%" align="center"><a accesskey="u" href="manual.html">Up</a></td>
-<td rowspan="2" width="40%" align="right"> <a accesskey="n" href="manual-core-adv.html">3. Using and understanding the Valgrind core: Advanced Topics &gt;&gt;</a>
+<td rowspan="2" width="40%" align="right">Â <a accesskey="n" href="manual-core-adv.html">3.Â Using and understanding the Valgrind core: Advanced TopicsÂ &gt;&gt;</a>
 </td>
 </tr>
 <tr><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td></tr>

@@ -21,9 +21,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -34,14 +32,14 @@
 #include "pub_tool_basics.h"           // ThreadID
 #include "libvex.h"                    // VexArchInfo
 
-#if defined(VGP_x86_linux) || defined(VGP_x86_solaris)
+#if defined(VGP_x86_linux) || defined(VGP_x86_solaris) || defined(VGP_x86_freebsd)
 #  define VG_MIN_INSTR_SZB          1  // min length of native instruction
 #  define VG_MAX_INSTR_SZB         16  // max length of native instruction
 #  define VG_CLREQ_SZB             14  // length of a client request, may
                                        //   be larger than VG_MAX_INSTR_SZB
 #  define VG_STACK_REDZONE_SZB      0  // number of addressable bytes below %RSP
 
-#elif defined(VGP_amd64_linux) || defined(VGP_amd64_solaris)
+#elif defined(VGP_amd64_linux) || defined(VGP_amd64_solaris) || defined(VGP_amd64_freebsd)
 #  define VG_MIN_INSTR_SZB          1
 #  define VG_MAX_INSTR_SZB         16
 #  define VG_CLREQ_SZB             19
@@ -55,7 +53,7 @@
 
 #elif defined(VGP_ppc64be_linux)  || defined(VGP_ppc64le_linux)
 #  define VG_MIN_INSTR_SZB          4
-#  define VG_MAX_INSTR_SZB          4 
+#  define VG_MAX_INSTR_SZB          8 // Prefix inst 8 bytes, word inst 4 bytes
 #  define VG_CLREQ_SZB             20
 #  define VG_STACK_REDZONE_SZB    288  // number of addressable bytes below R1
                                        // from 64-bit PowerPC ELF ABI 
@@ -67,7 +65,7 @@
 #  define VG_CLREQ_SZB             20
 #  define VG_STACK_REDZONE_SZB      0
 
-#elif defined(VGP_arm64_linux)
+#elif defined(VGP_arm64_linux) || defined(VGP_arm64_freebsd)
 #  define VG_MIN_INSTR_SZB          4
 #  define VG_MAX_INSTR_SZB          4 
 #  define VG_CLREQ_SZB             20
@@ -94,13 +92,25 @@
 
 #elif defined(VGP_mips32_linux)
 #  define VG_MIN_INSTR_SZB          4
-#  define VG_MAX_INSTR_SZB          4 
+#  define VG_MAX_INSTR_SZB          8
 #  define VG_CLREQ_SZB             20
 #  define VG_STACK_REDZONE_SZB      0
 
 #elif defined(VGP_mips64_linux)
 #  define VG_MIN_INSTR_SZB          4
-#  define VG_MAX_INSTR_SZB          4 
+#  define VG_MAX_INSTR_SZB          8
+#  define VG_CLREQ_SZB             20
+#  define VG_STACK_REDZONE_SZB      0
+
+#elif defined(VGP_nanomips_linux)
+#  define VG_MIN_INSTR_SZB          2
+#  define VG_MAX_INSTR_SZB          6
+#  define VG_CLREQ_SZB             20
+#  define VG_STACK_REDZONE_SZB      0
+
+#elif defined(VGP_riscv64_linux)
+#  define VG_MIN_INSTR_SZB          2
+#  define VG_MAX_INSTR_SZB          4
 #  define VG_CLREQ_SZB             20
 #  define VG_STACK_REDZONE_SZB      0
 

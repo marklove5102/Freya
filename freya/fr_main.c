@@ -1,4 +1,3 @@
-
 /*--------------------------------------------------------------------*/
 /*--- Freya: memory access logger tool.                  fr_main.c ---*/
 /*--------------------------------------------------------------------*/
@@ -429,9 +428,9 @@ static HChar* fr_get_name(Addr ips)
 
    if (VG_(get_filename_linenum)(ep, ips, &file_ptr, &dir_ptr, &linenum)) {
       if (dir_ptr[0] == '\0')
-         len = VG_(snprintf)(dst_ptr, (Int) dst_len, "(%s:%d)", file_ptr, linenum);
+         len = VG_(snprintf)(dst_ptr, (Int) dst_len, "(%s:%d)", file_ptr, (int)linenum);
       else
-         len = VG_(snprintf)(dst_ptr, (Int) dst_len, "(%s/%s:%d)", dir_ptr, file_ptr, linenum);
+         len = VG_(snprintf)(dst_ptr, (Int) dst_len, "(%s/%s:%d)", dir_ptr, file_ptr, (int)linenum);
    }
    else
    {
@@ -639,9 +638,9 @@ static void cross_thread_free ( ThreadId tid, Trace_Block* block )
       if (block->ips && VG_(get_filename_linenum)(ep, block->ips, &file_ptr, &dir_ptr, &linenum)) {
          dirname_available = dir_ptr[0] != '\0';
          if (!dirname_available)
-            VG_(printf)("(%s:%d)\n", file_ptr, linenum);
+            VG_(printf)("(%s:%d)\n", file_ptr, (int)linenum);
          else
-            VG_(printf)("(%s/%s:%d)\n", dir_ptr, file_ptr, linenum);
+            VG_(printf)("(%s/%s:%d)\n", dir_ptr, file_ptr, (int)linenum);
       }
       block = block->parent;
    }
@@ -657,9 +656,9 @@ static void cross_thread_free ( ThreadId tid, Trace_Block* block )
       if (VG_(get_filename_linenum)(ep, *ips_ptr, &file_ptr, &dir_ptr, &linenum)) {
          dirname_available = dir_ptr[0] != '\0';
          if (!dirname_available)
-            VG_(printf)( "(%s:%d)\n", file_ptr, linenum );
+            VG_(printf)( "(%s:%d)\n", file_ptr, (int)linenum );
          else
-            VG_(printf)( "(%s/%s:%d)\n", dir_ptr, file_ptr, linenum );
+            VG_(printf)( "(%s/%s:%d)\n", dir_ptr, file_ptr, (int)linenum );
       }
       --n_ips;
       ++ips_ptr;
@@ -962,9 +961,19 @@ static void* fr___builtin_new ( ThreadId tid, SizeT szB )
    return new_block( tid, szB, VG_(clo_alignment), /*is_zeroed*/False );
 }
 
+static void* fr___builtin_new_aligned ( ThreadId tid, SizeT szB, SizeT alignB, SizeT orig_alignB )
+{
+   return new_block( tid, szB, alignB, /*is_zeroed*/False );
+}
+
 static void* fr___builtin_vec_new ( ThreadId tid, SizeT szB )
 {
    return new_block( tid, szB, VG_(clo_alignment), /*is_zeroed*/False );
+}
+
+static void* fr___builtin_vec_new_aligned ( ThreadId tid, SizeT szB, SizeT alignB, SizeT orig_alignB )
+{
+   return new_block( tid, szB, alignB, /*is_zeroed*/False );
 }
 
 static void* fr_calloc ( ThreadId tid, SizeT m, SizeT szB )
@@ -972,7 +981,7 @@ static void* fr_calloc ( ThreadId tid, SizeT m, SizeT szB )
    return new_block( tid, m*szB, VG_(clo_alignment), /*is_zeroed*/True );
 }
 
-static void *fr_memalign ( ThreadId tid, SizeT alignB, SizeT szB )
+static void *fr_memalign ( ThreadId tid, SizeT alignB, SizeT orig_alignB, SizeT szB)
 {
    return new_block( tid, szB, alignB, False );
 }
@@ -987,7 +996,17 @@ static void fr___builtin_delete ( ThreadId tid, void* p )
    free_block( tid, p );
 }
 
+static void fr___builtin_delete_aligned ( ThreadId tid, void* p, SizeT align )
+{
+   free_block( tid, p );
+}
+
 static void fr___builtin_vec_delete ( ThreadId tid, void* p )
+{
+   free_block( tid, p );
+}
+
+static void fr___builtin_vec_delete_aligned ( ThreadId tid, void* p, SizeT align )
 {
    free_block( tid, p );
 }
@@ -1296,7 +1315,7 @@ static HChar* parse_rule(HChar* read_ptr, Rule_List** last_rule_ptr, Int line)
    }
 
    rule->path = read_ptr;
-   while (read_ptr != '\0' && *read_ptr != '\n' && *read_ptr != '\r')
+   while (*read_ptr != '\0' && *read_ptr != '\n' && *read_ptr != '\r')
       read_ptr++;
 
    rule->path_len = read_ptr - rule->path;
@@ -1316,9 +1335,9 @@ static HChar* parse_rule(HChar* read_ptr, Rule_List** last_rule_ptr, Int line)
 
    if (clo_fr_verb)
       VG_(printf)( "Rule: '%s' (%ld) %s: '%s' (%ld) Path: '%s' (%ld)\n",
-                   rule->name, rule->name_len,
-                   rule->is_namespace ? "Namesp" : "Func", rule->func_name, rule->func_name_len,
-                   rule->path, rule->path_len );
+                   rule->name, (long int)rule->name_len,
+                   rule->is_namespace ? "Namesp" : "Func", rule->func_name, (long int)rule->func_name_len,
+                   rule->path, (long int)rule->path_len );
    return read_ptr;
 }
 
@@ -1644,12 +1663,16 @@ static void fr_pre_clo_init(void)
 
    VG_(needs_malloc_replacement)  ( fr_malloc,
                                     fr___builtin_new,
+                                    fr___builtin_new_aligned,
                                     fr___builtin_vec_new,
+                                    fr___builtin_vec_new_aligned,
                                     fr_memalign,
                                     fr_calloc,
                                     fr_free,
                                     fr___builtin_delete,
+                                    fr___builtin_delete_aligned,
                                     fr___builtin_vec_delete,
+                                    fr___builtin_vec_delete_aligned,
                                     fr_realloc,
                                     fr_malloc_usable_size,
                                     0 );

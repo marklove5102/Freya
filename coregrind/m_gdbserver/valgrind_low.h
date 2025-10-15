@@ -36,11 +36,12 @@
 struct valgrind_target_ops
 {
    int num_regs;
-   struct reg *reg_defs;
 
    int stack_pointer_regno;
    /* register number of the stack pointer register */
-   
+
+   struct reg *reg_defs;
+
    /* transfer the register regno from/to valgrind (guest state)
       to/from buf
       according to transfer_direction.
@@ -107,5 +108,7 @@ extern void ppc64_init_architecture (struct valgrind_target_ops *target);
 extern void s390x_init_architecture (struct valgrind_target_ops *target);
 extern void mips32_init_architecture (struct valgrind_target_ops *target);
 extern void mips64_init_architecture (struct valgrind_target_ops *target);
+extern void nanomips_init_architecture (struct valgrind_target_ops *target);
+extern void riscv64_init_architecture (struct valgrind_target_ops *target);
 
 #endif

@@ -22,9 +22,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -55,6 +53,10 @@
 
 #include "pub_core_options.h"    // VG_(clo_sanity_level)
 
+#if defined(VGO_freebsd)
+#include "pub_core_libcproc.h"   // VG_(sysctlbyname)
+#endif
+
 #include "pub_core_aspacemgr.h"  // self
 
 
@@ -79,7 +81,7 @@ extern void   ML_(am_assert_fail) ( const HChar* expr,
                                     const HChar* fn );
 
 #define aspacem_assert(expr)                              \
-  ((void) (LIKELY(expr) ? 0 :                             \
+  ((void) (LIKELY(expr) ? (void)0 :                             \
            (ML_(am_assert_fail)(#expr,                    \
                                 __FILE__, __LINE__,       \
                                 __PRETTY_FUNCTION__))))

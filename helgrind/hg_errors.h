@@ -22,9 +22,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -79,6 +77,11 @@ void HG_(record_error_Misc_w_aux)     ( Thread*, const HChar* errstr,
                                         const HChar* auxstr,
                                         ExeContext* auxctx );
 void HG_(record_error_Misc)           ( Thread* thr, const HChar* errstr );
+
+void HG_(record_error_Dubious_w_aux)  ( Thread*, const HChar* errstr,
+                                        const HChar* auxstr,
+                                        ExeContext* auxctx );
+void HG_(record_error_Dubious)        ( Thread* thr, const HChar* errstr );
 
 
 /* Statistics pertaining to error management. */

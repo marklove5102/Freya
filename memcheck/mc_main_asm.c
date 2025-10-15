@@ -24,9 +24,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -85,7 +83,7 @@ __asm__( /* Derived from the 32 bit assembly helper */
 );
 
 #elif ENABLE_ASSEMBLY_HELPERS && defined(PERF_FAST_LOADV) \
-      && (defined(VGP_x86_linux) || defined(VGP_x86_solaris))
+      && (defined(VGP_x86_linux) || defined(VGP_x86_solaris) || defined(VGP_x86_freebsd))
 __asm__(
 ".text\n"
 ".align 16\n"

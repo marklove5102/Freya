@@ -21,9 +21,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -43,6 +41,7 @@
 #include "pub_core_machine.h"       // VG_ELF_CLASS (XXX: which should be moved)
 #include "pub_core_mallocfree.h"    // VG_(malloc), VG_(free)
 #include "pub_core_syscall.h"       // VG_(strerror)
+#include "pub_core_clientstate.h"
 #include "pub_core_ume.h"           // self
 
 #include "priv_ume.h"
@@ -858,6 +857,10 @@ Int VG_(load_macho)(Int fd, const HChar *name, ExeInfo *info)
    info->dynamic = load_info.linker_entry ? True : False;
 
    info->executable_path = VG_(strdup)("ume.macho.executable_path", name);
+
+   SysRes res = VG_(dup)(fd);
+   if (!sr_isError(res))
+      VG_(cl_exec_fd) = sr_Res(res);
 
    return 0;
 }

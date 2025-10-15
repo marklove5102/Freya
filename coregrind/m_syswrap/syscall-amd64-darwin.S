@@ -21,9 +21,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU General Public License
-  along with this program; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-  02111-1307, USA.
+  along with this program; if not, see <http://www.gnu.org/licenses/>.
 
   The GNU General Public License is contained in the file COPYING.
 */
@@ -155,7 +153,10 @@ L_$0_3:	/* In the range [3, 4), the syscall result is in %rax,
 	movq	%rax, %rdi	/* arg1 = new flag */
 	movq	%r11, %rsi	/* arg2 = vex state */
 	addq	$$24, %rsp	/* remove syscall parameters */
+        movl    $$1, OFFSET_amd64_SETC(%r11)
 	call	_LibVEX_GuestAMD64_put_rflag_c
+        movq	-16(%rbp), %r11
+        movl    $$0, OFFSET_amd64_SETC(%r11)
 .else
 	addq	$$24, %rsp	/* remove syscall parameters*/
 .endif

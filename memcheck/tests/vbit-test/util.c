@@ -17,9 +17,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -39,8 +37,12 @@
 #  else
 #  define __BYTE_ORDER    __BIG_ENDIAN
 #  endif
-#else
+#elif defined(__linux__)
 #include <endian.h>
+#else
+#define __BYTE_ORDER    BYTE_ORDER
+#define __LITTLE_ENDIAN LITTLE_ENDIAN
+#include <sys/endian.h>
 #endif
 #include <inttypes.h>
 #include "vtest.h"

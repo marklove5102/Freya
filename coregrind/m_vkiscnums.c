@@ -22,9 +22,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -69,6 +67,17 @@ STATIC_ASSERT(__NR_pipe2 == 5287);
 #endif
 
 //---------------------------------------------------------------------------
+#elif defined(VGO_freebsd)
+//---------------------------------------------------------------------------
+
+const HChar* VG_(sysnum_string)(Word sysnum)
+{
+   static HChar buf[20+1];   // large enough
+
+   VG_(snprintf)(buf, sizeof(buf), "%3ld", sysnum);
+   return buf;
+}
+
 #elif defined(VGO_darwin)
 //---------------------------------------------------------------------------
 

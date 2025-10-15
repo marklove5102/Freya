@@ -3,8 +3,8 @@
 /*--------------------------------------------------------------------*/
 
 /*
-   This file is part of Cachegrind, a Valgrind tool for cache
-   profiling programs.
+   This file is part of Cachegrind, a high-precision tracing profiler
+   built with Valgrind.
 
    Copyright (C) 2011-2017 Nicholas Nethercote
       njn@valgrind.org
@@ -20,9 +20,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -43,6 +41,16 @@ static void configure_caches(cache_t* I1c, cache_t* D1c, cache_t* LLc,
 // string otherwise.
 static const HChar* check_cache(cache_t* cache)
 {
+   if (cache->line_size == 0)
+   {
+      return "Cache line size is zero.\n";
+   }
+
+   if (cache->assoc == 0)
+   {
+      return "Cache associativity is zero.\n";
+   }
+
    // Simulator requires set count to be a power of two.
    if ((cache->size % (cache->line_size * cache->assoc) != 0) ||
        (-1 == VG_(log2)(cache->size/cache->line_size/cache->assoc)))
@@ -242,7 +250,6 @@ maybe_tweak_LLc(cache_t *LLc)
         power of two.  Then, increase the associativity by that
         factor.  Finally, re-calculate the total size so as to make
         sure it divides exactly between the sets. */
-     tl_assert(old_nSets >= 0);
      UInt new_nSets = floor_power_of_2 ( old_nSets );
      tl_assert(new_nSets > 0 && new_nSets < old_nSets);
      Double factor = (Double)old_nSets / (Double)new_nSets;
@@ -299,7 +306,7 @@ void VG_(post_clo_init_configure_caches)(cache_t* I1c,
    check_cache_or_override ("LL", LLc, DEFINED(clo_LLc));
 
    // Then replace with any defined on the command line.  (Already checked in
-   // VG(parse_clo_cache_opt)().)
+   // VG(str_clo_cache_opt)().)
    if (DEFINED(clo_I1c)) { *I1c = *clo_I1c; }
    if (DEFINED(clo_D1c)) { *D1c = *clo_D1c; }
    if (DEFINED(clo_LLc)) { *LLc = *clo_LLc; }
@@ -313,13 +320,13 @@ void VG_(post_clo_init_configure_caches)(cache_t* I1c,
 #undef DEFINED
 }
 
-void VG_(print_cache_clo_opts)()
+void VG_(print_cache_clo_opts)(void)
 {
    VG_(printf)(
 "    --I1=<size>,<assoc>,<line_size>  set I1 cache manually\n"
 "    --D1=<size>,<assoc>,<line_size>  set D1 cache manually\n"
 "    --LL=<size>,<assoc>,<line_size>  set LL cache manually\n"
-               );
+   );
 }
 
 
@@ -457,7 +464,7 @@ configure_caches(cache_t *I1c, cache_t *D1c, cache_t *LLc,
    *D1c = (cache_t) {   131072,  8, 256 };
    *LLc = (cache_t) { 50331648, 24, 256 };
 
-#elif defined(VGA_mips32)
+#elif defined(VGA_mips32) || defined(VGA_nanomips)
 
    // Set caches to default (for MIPS32-r2(mips 74kc))
    *I1c = (cache_t) {  32768, 4, 32 };
@@ -476,6 +483,13 @@ configure_caches(cache_t *I1c, cache_t *D1c, cache_t *LLc,
    *I1c = (cache_t) {  65536, 2, 64 };
    *D1c = (cache_t) {  65536, 2, 64 };
    *LLc = (cache_t) { 262144, 8, 64 };
+
+#elif defined(VGA_riscv64)
+
+   // Default cache configuration is SiFive FU740-C000 (HiFive Unmatched)
+   *I1c = (cache_t) {   32768,  4, 64 };
+   *D1c = (cache_t) {   32768,  8, 64 };
+   *LLc = (cache_t) { 2097152, 16, 64 };
 
 #else
 

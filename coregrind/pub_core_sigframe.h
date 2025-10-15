@@ -22,9 +22,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -60,9 +58,13 @@ void VG_(sigframe_create) ( ThreadId tid,
 
 /* Remove a signal frame from thread 'tid's stack, and 
    restore the CPU state from it. */
+#ifdef VGO_freebsd
+extern 
+void VG_(sigframe_destroy)( ThreadId tid );
+#else
 extern 
 void VG_(sigframe_destroy)( ThreadId tid, Bool isRT );
-
+#endif
 #if defined(VGO_solaris)
 extern
 void VG_(sigframe_return)(ThreadId tid, const vki_ucontext_t *uc);

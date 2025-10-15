@@ -21,9 +21,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-   02110-1301, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 
@@ -100,6 +98,17 @@ extern UInt vex_sprintf ( HChar* buf, const HChar *format, ... );
 extern Bool vex_streq ( const HChar* s1, const HChar* s2 );
 extern SizeT vex_strlen ( const HChar* str );
 extern void vex_bzero ( void* s, SizeT n );
+
+
+/* Math ops */
+
+/* Sign extend an N-bit value up to 64 bits, by copying bit N-1 into all higher
+   positions. */
+static inline ULong vex_sx_to_64( ULong x, UInt n )
+{
+   vassert(n >= 1 && n < 64);
+   return (ULong)((Long)(x << (64 - n)) >> (64 - n));
+}
 
 
 /* Storage management: clear the area, and allocate from it. */

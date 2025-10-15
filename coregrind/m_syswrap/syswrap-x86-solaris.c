@@ -21,9 +21,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -973,6 +971,7 @@ PRE(sys_open64)
 
 POST(sys_open64)
 {
+   POST_newFd_RES;
    if (!ML_(fd_allowed)(RES, "open64", tid, True)) {
       VG_(close)(RES);
       SET_STATUS_Failure(VKI_EMFILE);

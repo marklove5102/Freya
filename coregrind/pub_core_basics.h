@@ -21,9 +21,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -57,8 +55,10 @@
 
 typedef
    struct {
-      ULong r_pc; /* x86:EIP, amd64:RIP, ppc:CIA, arm:R15, mips:pc */
-      ULong r_sp; /* x86:ESP, amd64:RSP, ppc:R1,  arm:R13, mips:sp */
+      ULong r_pc; /* x86:EIP, amd64:RIP, ppc:CIA, arm:R15, mips:pc,
+                     riscv64: pc */
+      ULong r_sp; /* x86:ESP, amd64:RSP, ppc:R1,  arm:R13, mips:sp,
+                     riscv64: x2 */
       union {
          struct {
             UInt r_ebp;
@@ -104,6 +104,10 @@ typedef
             ULong r31;  /* Return address of the last subroutine call */
             ULong r28;
          } MIPS64;
+         struct {
+            ULong r_fp; /* x8 */
+            ULong r_ra; /* x1 */
+         } RISCV64;
       } misc;
    }
    UnwindStartRegs;

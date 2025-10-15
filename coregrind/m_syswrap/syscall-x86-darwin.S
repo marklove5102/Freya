@@ -21,9 +21,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU General Public License
-  along with this program; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-  02111-1307, USA.
+  along with this program; if not, see <http://www.gnu.org/licenses/>.
 
   The GNU General Public License is contained in the file COPYING.
 */
@@ -158,7 +156,10 @@ L_$0_3:	/* In the range [3, 4), the syscall result is in %eax and %edx and C,
 	movl	$$0, 0(%esp)
 	movb	12(%esp), %al
 	movb	%al, 0(%esp)
+        movl    $$1, OFFSET_x86_SETC(%ecx)
 	call	_LibVEX_GuestX86_put_eflag_c
+        movl	12(%ebp), %ecx
+        movl    $$0, OFFSET_x86_SETC(%ecx)
 	addl	$$12, %esp
 .endif
 

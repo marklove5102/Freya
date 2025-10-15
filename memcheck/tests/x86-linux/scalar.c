@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <sched.h>
 #include <signal.h>
-#include <linux/mman.h> // MREMAP_FIXED
+#include <sys/mman.h> // MREMAP_FIXED
 #include <sys/prctl.h>
 
 // Here we are trying to trigger every syscall error (scalar errors and
@@ -95,9 +95,9 @@ int main(void)
    char *argv_envp[] = {(char *) (x0 + 1), NULL};
    GO(__NR_execve, "4s 2m");
    SY(__NR_execve, x0 + 1, x0 + argv_envp, x0); FAIL;
-
+   char *argv_ok[] = {"frob", NULL};
    GO(__NR_execve, "4s 2m");
-   SY(__NR_execve, x0 + 1, x0, x0 + argv_envp); FAIL;
+   SY(__NR_execve, x0 + 1, x0 + argv_ok, x0 + argv_envp); FAIL;
 
    // __NR_chdir 12
    GO(__NR_chdir, "1s 1m");
@@ -137,7 +137,7 @@ int main(void)
 
    // __NR_mount 21
    GO(__NR_mount, "5s 3m");
-   SY(__NR_mount, x0, x0, x0, x0, x0); FAIL;
+   SY(__NR_mount, x0, x0, x0-1, x0, x0); FAIL;
    
    // __NR_umount 22
    GO(__NR_umount, "1s 1m");
@@ -145,7 +145,7 @@ int main(void)
 
    // __NR_setuid 23
    GO(__NR_setuid, "1s 0m");
-   SY(__NR_setuid, x0); FAIL;
+   SY(__NR_setuid, x0-1); FAIL;
 
    // __NR_getuid 24
    GO(__NR_getuid, "0s 0m");
@@ -238,7 +238,7 @@ int main(void)
 
    // __NR_setgid 46
    GO(__NR_setgid, "1s 0m");
-   SY(__NR_setgid, x0); FAIL;
+   SY(__NR_setgid, x0-1); FAIL;
 
    // __NR_getgid 47
    GO(__NR_getgid, "0s 0m");
@@ -258,7 +258,7 @@ int main(void)
 
    // __NR_acct 51
    GO(__NR_acct, "1s 1m");
-   SY(__NR_acct, x0); FAIL;
+   SY(__NR_acct, x0-1); FAIL;
 
    // __NR_umount2 52
    GO(__NR_umount2, "2s 1m");
@@ -269,7 +269,7 @@ int main(void)
    SY(__NR_lock); FAIL;
 
    // __NR_ioctl 54
-   #include <asm/ioctls.h>
+   #include <sys/ioctl.h>
    GO(__NR_ioctl, "3s 1m");
    SY(__NR_ioctl, x0, x0+TCSETS, x0); FAIL;
 
@@ -349,11 +349,11 @@ int main(void)
 
    // __NR_setreuid 70
    GO(__NR_setreuid, "2s 0m");
-   SY(__NR_setreuid, x0, x0); FAIL;
+   SY(__NR_setreuid, x0-1, x0-1); SUCC;
 
    // __NR_setregid 71
    GO(__NR_setregid, "2s 0m");
-   SY(__NR_setregid, x0, x0); FAIL;
+   SY(__NR_setregid, x0-1, x0-1); SUCC;
 
    // __NR_sigsuspend 72
    // XXX: how do you use this function?
@@ -456,7 +456,7 @@ int main(void)
 
    // __NR_fchown 95
    GO(__NR_fchown, "3s 0m");
-   SY(__NR_fchown, x0, x0, x0); FAIL;
+   SY(__NR_fchown, x0-1, x0, x0); FAIL;
 
    // __NR_getpriority 96
    GO(__NR_getpriority, "2s 0m");
@@ -742,7 +742,7 @@ int main(void)
 
    // __NR_setresuid 164
    GO(__NR_setresuid, "3s 0m");
-   SY(__NR_setresuid, x0, x0, x0); FAIL;
+   SY(__NR_setresuid, x0-1, x0-1, x0-1); SUCC;
 
    // __NR_getresuid 165
    GO(__NR_getresuid, "3s 3m");
@@ -766,7 +766,7 @@ int main(void)
 
    // __NR_setresgid 170
    GO(__NR_setresgid, "3s 0m");
-   SY(__NR_setresgid, x0, x0, x0); FAIL;
+   SY(__NR_setresgid, x0-1, x0-1, x0-1); SUCC;
 
    // __NR_getresgid 171
    GO(__NR_getresgid, "3s 3m");
@@ -923,11 +923,11 @@ int main(void)
 
    // __NR_setreuid32 203
    GO(__NR_setreuid32, "2s 0m");
-   SY(__NR_setreuid32, x0, x0); FAIL;
+   SY(__NR_setreuid32, x0-1, x0-1); SUCC;
 
    // __NR_setregid32 204
    GO(__NR_setregid32, "2s 0m");
-   SY(__NR_setregid32, x0, x0); FAIL;
+   SY(__NR_setregid32, x0-1, x0-1); SUCC;
 
    // __NR_getgroups32 205
    GO(__NR_getgroups32, "2s 1m");
@@ -939,11 +939,11 @@ int main(void)
 
    // __NR_fchown32 207
    GO(__NR_fchown32, "3s 0m");
-   SY(__NR_fchown32, x0, x0, x0); FAIL;
+   SY(__NR_fchown32, x0-1, x0, x0); FAIL;
 
    // __NR_setresuid32 208
    GO(__NR_setresuid32, "3s 0m");
-   SY(__NR_setresuid32, x0, x0, x0); FAIL;
+   SY(__NR_setresuid32, x0-1, x0-1, x0-1); SUCC;
 
    // __NR_getresuid32 209
    GO(__NR_getresuid32, "3s 3m");
@@ -951,7 +951,7 @@ int main(void)
 
    // __NR_setresgid32 210
    GO(__NR_setresgid32, "3s 0m");
-   SY(__NR_setresgid32, x0, x0, x0); FAIL;
+   SY(__NR_setresgid32, x0-1, x0-1, x0-1); SUCC;
 
    // __NR_getresgid32 211
    GO(__NR_getresgid32, "3s 3m");
@@ -963,11 +963,11 @@ int main(void)
 
    // __NR_setuid32 213
    GO(__NR_setuid32, "1s 0m");
-   SY(__NR_setuid32, x0); FAIL;
+   SY(__NR_setuid32, x0-1); FAIL;
 
    // __NR_setgid32 214
    GO(__NR_setgid32, "1s 0m");
-   SY(__NR_setgid32, x0); FAIL;
+   SY(__NR_setgid32, x0-1); FAIL;
 
    // __NR_setfsuid32 215
    GO(__NR_setfsuid32, "1s 0m");

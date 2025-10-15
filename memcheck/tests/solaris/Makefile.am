@@ -12,6 +12,8 @@ dist_noinst_SCRIPTS = \
 noinst_HEADERS = scalar.h
 
 EXTRA_DIST = \
+	aligned_alloc.stderr.exp aligned_alloc.vgtest \
+	aligned_alloc.stderr.exp-solaris \
 	brk.stderr.exp brk.stdout.exp brk.vgtest \
 	context_stack_die.stderr.exp context_stack_die.stdout.exp context_stack_die.vgtest \
 	door_data.stderr.exp door_data.stdout.exp door_data.vgtest \
@@ -32,6 +34,7 @@ EXTRA_DIST = \
 	scalar_auditon_stat.stderr.exp scalar_auditon_stat.stdout.exp scalar_auditon_stat.vgtest \
 	scalar_frealpathat.stderr.exp scalar_frealpathat.stdout.exp scalar_frealpathat.vgtest \
 	scalar_getrandom.stderr.exp scalar_getrandom.stdout.exp scalar_getrandom.vgtest \
+	scalar_getrandom.stderr.exp-illumos \
 	scalar_ioctl.stderr.exp scalar_ioctl.stdout.exp scalar_ioctl.vgtest \
 	scalar_lwp_kill.stderr.exp scalar_lwp_kill.stdout.exp scalar_lwp_kill.vgtest \
 	scalar_lwp_name.stderr.exp scalar_lwp_name.stdout.exp scalar_lwp_name.vgtest \
@@ -54,9 +57,11 @@ EXTRA_DIST = \
 	supponlyobj.stderr.exp supponlyobj.supp supponlyobj.vgtest \
 	syscall_at.stderr.exp syscall_at.stdout.exp syscall_at.vgtest \
 	thr_daemon_exit_libc.stderr.exp thr_daemon_exit_libc.stdout.exp thr_daemon_exit_libc.vgtest \
-	thr_daemon_exit_standalone.stderr.exp thr_daemon_exit_standalone.stdout.exp thr_daemon_exit_standalone.vgtest
+	thr_daemon_exit_standalone.stderr.exp thr_daemon_exit_standalone.stdout.exp thr_daemon_exit_standalone.vgtest \
+	memalign.vgtest memalign.stderr.exp
 
 check_PROGRAMS = \
+	aligned_alloc \
 	brk \
 	context_stack_die \
 	door_data \
@@ -79,7 +84,8 @@ check_PROGRAMS = \
 	strlcpy \
 	syscall_at \
 	thr_daemon_exit_libc \
-	thr_daemon_exit_standalone
+	thr_daemon_exit_standalone \
+	memalign
 
 if SOLARIS_EXECVE_SYSCALL_TAKES_FLAGS
 check_PROGRAMS += execx
@@ -164,9 +170,18 @@ AM_CFLAGS   += $(AM_FLAG_M3264_PRI)
 AM_CXXFLAGS += $(AM_FLAG_M3264_PRI)
 
 door_kill_LDADD = -lpthread
+name_service_door_CFLAGS = ${AM_CFLAGS} @FLAG_W_NO_UNINITIALIZED@
 ioctl_LDADD = -lsocket
+ldynsym_CFLAGS = ${AM_CFLAGS} @FLAG_W_NO_UNUSED_RESULT@
 ldynsym_LDFLAGS = -Wl,--strip-all
 pkcs11_LDADD = -lpkcs11
+scalar_CFLAGS = ${AM_CFLAGS} @FLAG_W_NO_UNINITIALIZED@ @FLAG_W_NO_UNUSED_FUNCTION@
+scalar_ioctl_CFLAGS = ${AM_CFLAGS} @FLAG_W_NO_UNINITIALIZED@
+scalar_obsolete_CFLAGS = ${AM_CFLAGS} @FLAG_W_NO_UNINITIALIZED@
+scalar_auditon_stat_CFLAGS = ${AM_CFLAGS} @FLAG_W_NO_UNINITIALIZED@
+scalar_getrandom_CFLAGS = ${AM_CFLAGS} @FLAG_W_NO_UNINITIALIZED@
+scalar_lwp_kill_CFLAGS = ${AM_CFLAGS} @FLAG_W_NO_UNINITIALIZED@
+scalar_utimesys_CFLAGS = ${AM_CFLAGS} @FLAG_W_NO_UNINITIALIZED@
 sendfilev_LDADD = -lsendfile
 
 inlinfo_SOURCES = inlinfo.c

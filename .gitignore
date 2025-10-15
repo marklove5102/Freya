@@ -143,6 +143,7 @@
 /coregrind/fixup_macho_loadcmds
 /coregrind/link_tool_exe_aix5
 /coregrind/link_tool_exe_darwin
+/coregrind/link_tool_exe_freebsd
 /coregrind/link_tool_exe_linux
 /coregrind/link_tool_exe_solaris
 /coregrind/Makefile
@@ -189,6 +190,10 @@
 /coregrind/m_dispatch/.dirstamp
 /coregrind/m_dispatch/Makefile
 /coregrind/m_dispatch/Makefile.in
+
+# /coregrind/m_extension/
+/coregrind/m_extension/.deps
+/coregrind/m_extension/.dirstamp
 
 # /coregrind/m_gdbserver/
 /coregrind/m_gdbserver/.deps
@@ -822,6 +827,10 @@
 /memcheck/tests/.deps
 /memcheck/tests/accounting
 /memcheck/tests/addressable
+/memcheck/tests/amd64-freebsd/.deps
+/memcheck/tests/amd64-freebsd/Makefile
+/memcheck/tests/arm64/.deps
+/memcheck/tests/arm64/Makefile
 /memcheck/tests/atomic_incs
 /memcheck/tests/badaddrvalue
 /memcheck/tests/badfree
@@ -871,7 +880,10 @@
 /memcheck/tests/file_locking
 /memcheck/tests/filter_leak_check_size
 /memcheck/tests/filter_stderr
+/memcheck/tests/filter_supp
 /memcheck/tests/fprw
+/memcheck/tests/freebsd/.deps
+/memcheck/tests/freebsd/Makefile
 /memcheck/tests/fwrite
 /memcheck/tests/hello
 /memcheck/tests/holey_buffer_too_small
@@ -894,6 +906,7 @@
 /memcheck/tests/linux-syscalls-2007
 /memcheck/tests/linux-syslog-syscall
 /memcheck/tests/linux-timerfd-syscall
+/memcheck/tests/linux/debuginfod-check.vgtest
 /memcheck/tests/long-supps
 /memcheck/tests/long_namespace_xml
 /memcheck/tests/lsframe1
@@ -946,6 +959,8 @@
 /memcheck/tests/realloc3
 /memcheck/tests/recursive-merge
 /memcheck/tests/resvn_stack
+/memcheck/tests/riscv64-linux/.deps
+/memcheck/tests/riscv64-linux/Makefile
 /memcheck/tests/sbfragment
 /memcheck/tests/scalar
 /memcheck/tests/scalar_exit_group
@@ -1004,6 +1019,8 @@
 /memcheck/tests/wrapmalloc
 /memcheck/tests/wrapmallocstatic
 /memcheck/tests/writev1
+/memcheck/tests/x86-freebsd/.deps
+/memcheck/tests/x86-freebsd/Makefile
 /memcheck/tests/xml1
 /memcheck/tests/zeropage
 
@@ -1361,6 +1378,8 @@
 /none/tests/fdleak_socketpair
 /none/tests/floored
 /none/tests/fork
+/none/tests/freebsd/.deps
+/none/tests/freebsd/Makefile
 /none/tests/fucomip
 /none/tests/garbage.filtered.out
 /none/tests/gxx304
@@ -1392,6 +1411,8 @@
 /none/tests/mremap
 /none/tests/mremap2
 /none/tests/munmap_exe
+/none/tests/nanomips/.deps
+/none/tests/nanomips/Makefile
 /none/tests/nestedfns
 /none/tests/nocwd
 /none/tests/pending
@@ -1426,8 +1447,13 @@
 /none/tests/require-text-symbol
 /none/tests/resolv
 /none/tests/res_search
+/none/tests/riscv64/.deps
+/none/tests/riscv64/Makefile
 /none/tests/rlimit_nofile
 /none/tests/rlimit64_nofile
+/none/tests/s390x/disasm-test/.deps
+/none/tests/s390x/disasm-test/Makefile
+/none/tests/s390x/disasm-test/disasm-test
 /none/tests/selfrun
 /none/tests/sem
 /none/tests/semlimit
@@ -1453,6 +1479,8 @@
 /none/tests/vgcore.*
 /none/tests/vgprintf
 /none/tests/vgprintf_nvalgrind
+/none/tests/x86-freebsd/.deps
+/none/tests/x86-freebsd/Makefile
 /none/tests/yield
 
 # /none/tests/amd64/

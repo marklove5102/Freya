@@ -21,9 +21,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-   02110-1301, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 
@@ -133,7 +131,10 @@ typedef
 
       /* Emulation notes */
       UInt  guest_EMNOTE;
-      UInt  pad2;
+      /* Used by Darwin and FreeBSD when setting the carry flag from
+       * ML_(do_syscall_for_client_WRK). Needed to determine how
+       * to restart interrupted syscalls. */
+      UInt guest_SETC;
 
       /* Translation-invalidation area description.  Not used on amd64
          (there is no invalidate-icache insn), but needed so as to

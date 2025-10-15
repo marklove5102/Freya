@@ -26,9 +26,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-   02110-1301, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -211,7 +209,7 @@ static inline UShort getUShortLittleEndianly ( const UChar* p )
 }
 
 static UInt ROR32 ( UInt x, UInt sh ) {
-   vassert(sh >= 0 && sh < 32);
+   vassert(sh < 32);
    if (sh == 0)
       return x;
    else
@@ -632,7 +630,7 @@ static void putIRegT ( UInt       iregNo,
    /* So, generate either an unconditional or a conditional write to
       the reg. */
    ASSERT_IS_THUMB;
-   vassert(iregNo >= 0 && iregNo <= 14);
+   vassert(iregNo <= 14);
    if (guardT == IRTemp_INVALID) {
       /* unconditional write */
       llPutIReg( iregNo, e );
@@ -1342,6 +1340,7 @@ void setFlags_D1_D2_ND ( UInt cc_op, IRTemp t_dep1,
    vassert(typeOfIRTemp(irsb->tyenv, t_dep1 == Ity_I32));
    vassert(typeOfIRTemp(irsb->tyenv, t_dep2 == Ity_I32));
    vassert(typeOfIRTemp(irsb->tyenv, t_ndep == Ity_I32));
+   // strictly unsigned cc_op must always be >= 0,  keeping for readability
    vassert(cc_op >= ARMG_CC_OP_COPY && cc_op < ARMG_CC_OP_NUMBER);
    if (guardT == IRTemp_INVALID) {
       /* unconditional */
@@ -12798,7 +12797,7 @@ static Bool decode_V8_instruction (
         const HChar* iNames[4]
            = { "aese", "aesd", "aesmc", "aesimc" };
 
-        vassert(opc >= 0 && opc <= 3);
+        vassert(opc <= 3);
         void*        helper = helpers[opc];
         const HChar* hname  = hNames[opc];
 
@@ -12875,7 +12874,7 @@ static Bool decode_V8_instruction (
         gate = False;
 
      if (gate) {
-        vassert(ix >= 0 && ix < 7);
+        vassert(ix < 7);
         const HChar* inames[7]
            = { "sha1c", "sha1p", "sha1m", "sha1su0",
                "sha256h", "sha256h2", "sha256su1" };
@@ -16079,9 +16078,6 @@ static Bool decode_NV_instruction_ARMv7_and_below
 
 static
 DisResult disInstr_ARM_WRK (
-             Bool         (*resteerOkFn) ( /*opaque*/void*, Addr ),
-             Bool         resteerCisOk,
-             void*        callback_opaque,
              const UChar* guest_instr,
              const VexArchInfo* archinfo,
              const VexAbiInfo*  abiinfo,
@@ -16101,7 +16097,6 @@ DisResult disInstr_ARM_WRK (
    /* Set result defaults. */
    dres.whatNext    = Dis_Continue;
    dres.len         = 4;
-   dres.continueAt  = 0;
    dres.jk_StopHere = Ijk_INVALID;
    dres.hint        = Dis_HintNone;
 
@@ -17036,75 +17031,19 @@ DisResult disInstr_ARM_WRK (
                       condT, Ijk_Boring);
       }
       if (condT == IRTemp_INVALID) {
-         /* unconditional transfer to 'dst'.  See if we can simply
-            continue tracing at the destination. */
-         if (resteerOkFn( callback_opaque, dst )) {
-            /* yes */
-            dres.whatNext   = Dis_ResteerU;
-            dres.continueAt = dst;
-         } else {
-            /* no; terminate the SB at this point. */
-            llPutIReg(15, mkU32(dst));
-            dres.jk_StopHere = jk;
-            dres.whatNext    = Dis_StopHere;
-         }
+         /* Unconditional transfer to 'dst'.  Terminate the SB at this point. */
+         llPutIReg(15, mkU32(dst));
+         dres.jk_StopHere = jk;
+         dres.whatNext    = Dis_StopHere;
          DIP("b%s 0x%x\n", link ? "l" : "", dst);
       } else {
-         /* conditional transfer to 'dst' */
-         const HChar* comment = "";
-
-         /* First see if we can do some speculative chasing into one
-            arm or the other.  Be conservative and only chase if
-            !link, that is, this is a normal conditional branch to a
-            known destination. */
-         if (!link
-             && resteerCisOk
-             && vex_control.guest_chase_cond
-             && dst < guest_R15_curr_instr_notENC
-             && resteerOkFn( callback_opaque, dst) ) {
-            /* Speculation: assume this backward branch is taken.  So
-               we need to emit a side-exit to the insn following this
-               one, on the negation of the condition, and continue at
-               the branch target address (dst). */
-            stmt( IRStmt_Exit( unop(Iop_Not1,
-                                    unop(Iop_32to1, mkexpr(condT))),
-                               Ijk_Boring,
-                               IRConst_U32(guest_R15_curr_instr_notENC+4),
-                               OFFB_R15T ));
-            dres.whatNext   = Dis_ResteerC;
-            dres.continueAt = (Addr32)dst;
-            comment = "(assumed taken)";
-         }
-         else
-         if (!link
-             && resteerCisOk
-             && vex_control.guest_chase_cond
-             && dst >= guest_R15_curr_instr_notENC
-             && resteerOkFn( callback_opaque, 
-                             guest_R15_curr_instr_notENC+4) ) {
-            /* Speculation: assume this forward branch is not taken.
-               So we need to emit a side-exit to dst (the dest) and
-               continue disassembling at the insn immediately
-               following this one. */
-            stmt( IRStmt_Exit( unop(Iop_32to1, mkexpr(condT)),
-                               Ijk_Boring,
-                               IRConst_U32(dst),
-                               OFFB_R15T ));
-            dres.whatNext   = Dis_ResteerC;
-            dres.continueAt = guest_R15_curr_instr_notENC+4;
-            comment = "(assumed not taken)";
-         }
-         else {
-            /* Conservative default translation - end the block at
-               this point. */
-            stmt( IRStmt_Exit( unop(Iop_32to1, mkexpr(condT)),
-                               jk, IRConst_U32(dst), OFFB_R15T ));
-            llPutIReg(15, mkU32(guest_R15_curr_instr_notENC + 4));
-            dres.jk_StopHere = Ijk_Boring;
-            dres.whatNext    = Dis_StopHere;
-         }
-         DIP("b%s%s 0x%x %s\n", link ? "l" : "", nCC(INSN_COND),
-             dst, comment);
+         /* Conditional transfer to 'dst'.  Terminate the SB at this point. */
+         stmt( IRStmt_Exit( unop(Iop_32to1, mkexpr(condT)),
+                            jk, IRConst_U32(dst), OFFB_R15T ));
+         llPutIReg(15, mkU32(guest_R15_curr_instr_notENC + 4));
+         dres.jk_StopHere = Ijk_Boring;
+         dres.whatNext    = Dis_StopHere;
+         DIP("b%s%s 0x%x\n", link ? "l" : "", nCC(INSN_COND), dst);
       }
       goto decode_success;
    }
@@ -17856,7 +17795,7 @@ DisResult disInstr_ARM_WRK (
          IRTemp tmp  = newTemp(Ity_I32);
          IRTemp res  = newTemp(Ity_I32);
          UInt   mask = ((1 << wm1) - 1) + (1 << wm1);
-         vassert(msb >= 0 && msb <= 31);
+         vassert(msb <= 31);
          vassert(mask != 0); // guaranteed by msb being in 0 .. 31 inclusive
 
          assign(src, getIRegA(rN));
@@ -18898,7 +18837,6 @@ DisResult disInstr_ARM_WRK (
    dres.len         = 0;
    dres.whatNext    = Dis_StopHere;
    dres.jk_StopHere = Ijk_NoDecode;
-   dres.continueAt  = 0;
    return dres;
 
   decode_success:
@@ -18955,10 +18893,6 @@ DisResult disInstr_ARM_WRK (
          case Dis_Continue:
             llPutIReg(15, mkU32(dres.len + guest_R15_curr_instr_notENC));
             break;
-         case Dis_ResteerU:
-         case Dis_ResteerC:
-            llPutIReg(15, mkU32(dres.continueAt));
-            break;
          case Dis_StopHere:
             break;
          default:
@@ -18991,9 +18925,6 @@ static const UChar it_length_table[256]; /* fwds */
 
 static   
 DisResult disInstr_THUMB_WRK (
-             Bool         (*resteerOkFn) ( /*opaque*/void*, Addr ),
-             Bool         resteerCisOk,
-             void*        callback_opaque,
              const UChar* guest_instr,
              const VexArchInfo* archinfo,
              const VexAbiInfo*  abiinfo,
@@ -19018,7 +18949,6 @@ DisResult disInstr_THUMB_WRK (
    /* Set result defaults. */
    dres.whatNext    = Dis_Continue;
    dres.len         = 2;
-   dres.continueAt  = 0;
    dres.jk_StopHere = Ijk_INVALID;
    dres.hint        = Dis_HintNone;
 
@@ -20763,7 +20693,6 @@ DisResult disInstr_THUMB_WRK (
    /* Change result defaults to suit 32-bit insns. */
    vassert(dres.whatNext   == Dis_Continue);
    vassert(dres.len        == 2);
-   vassert(dres.continueAt == 0);
    dres.len = 4;
 
    /* ---------------- BL/BLX simm26 ---------------- */
@@ -22343,7 +22272,7 @@ DisResult disInstr_THUMB_WRK (
          IRTemp tmp  = newTemp(Ity_I32);
          IRTemp res  = newTemp(Ity_I32);
          UInt   mask = ((1 << wm1) - 1) + (1 << wm1);
-         vassert(msb >= 0 && msb <= 31);
+         vassert(msb <= 31);
          vassert(mask != 0); // guaranteed by msb being in 0 .. 31 inclusive
 
          assign(src, getIRegT(rN));
@@ -23533,7 +23462,6 @@ DisResult disInstr_THUMB_WRK (
    dres.len         = 0;
    dres.whatNext    = Dis_StopHere;
    dres.jk_StopHere = Ijk_NoDecode;
-   dres.continueAt  = 0;
    return dres;
 
   decode_success:
@@ -23542,10 +23470,6 @@ DisResult disInstr_THUMB_WRK (
    switch (dres.whatNext) {
       case Dis_Continue:
          llPutIReg(15, mkU32(dres.len + (guest_R15_curr_instr_notENC | 1)));
-         break;
-      case Dis_ResteerU:
-      case Dis_ResteerC:
-         llPutIReg(15, mkU32(dres.continueAt));
          break;
       case Dis_StopHere:
          break;
@@ -23652,9 +23576,6 @@ static const UChar it_length_table[256]
    is located in host memory at &guest_code[delta]. */
 
 DisResult disInstr_ARM ( IRSB*        irsb_IN,
-                         Bool         (*resteerOkFn) ( void*, Addr ),
-                         Bool         resteerCisOk,
-                         void*        callback_opaque,
                          const UChar* guest_code_IN,
                          Long         delta_ENCODED,
                          Addr         guest_IP_ENCODED,
@@ -23681,14 +23602,10 @@ DisResult disInstr_ARM ( IRSB*        irsb_IN,
    }
 
    if (isThumb) {
-      dres = disInstr_THUMB_WRK ( resteerOkFn,
-                                  resteerCisOk, callback_opaque,
-                                  &guest_code_IN[delta_ENCODED - 1],
+      dres = disInstr_THUMB_WRK ( &guest_code_IN[delta_ENCODED - 1],
                                   archinfo, abiinfo, sigill_diag_IN );
    } else {
-      dres = disInstr_ARM_WRK ( resteerOkFn,
-                                resteerCisOk, callback_opaque,
-                                &guest_code_IN[delta_ENCODED],
+      dres = disInstr_ARM_WRK ( &guest_code_IN[delta_ENCODED],
                                 archinfo, abiinfo, sigill_diag_IN );
    }
 

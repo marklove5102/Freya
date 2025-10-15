@@ -21,9 +21,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -83,6 +81,9 @@ extern Int    VG_(pipe)   ( Int fd[2] );
 extern Off64T VG_(lseek)  ( Int fd, Off64T offset, Int whence );
 
 extern SysRes VG_(stat)   ( const HChar* file_name, struct vg_stat* buf );
+#if defined(VGO_freebsd)
+extern SysRes VG_(lstat)  ( const HChar* file_name, struct vg_stat* buf );
+#endif
 extern Int    VG_(fstat)  ( Int   fd,        struct vg_stat* buf );
 extern SysRes VG_(dup)    ( Int oldfd );
 extern SysRes VG_(dup2)   ( Int oldfd, Int newfd );

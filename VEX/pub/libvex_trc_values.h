@@ -21,9 +21,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-   02110-1301, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 
@@ -78,6 +76,8 @@
                                       before continuing */
 #define VEX_TRC_JMP_NODECODE   69  /* next instruction is not decodable */
 #define VEX_TRC_JMP_MAPFAIL    71  /* address translation failed */
+
+#define VEX_TRC_JMP_EXTENSION 114  /* invoke extension before continuing */
 
 #define VEX_TRC_JMP_SYS_SYSCALL  73 /* do syscall before continuing */
 #define VEX_TRC_JMP_SYS_INT32    75 /* do syscall before continuing */

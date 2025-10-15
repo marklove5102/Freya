@@ -21,9 +21,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-   02110-1301, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 
@@ -349,6 +347,8 @@ typedef
       // Only for F16C capable hosts:
       Asse_F32toF16, // F32 to F16 conversion, aka vcvtps2ph
       Asse_F16toF32, // F16 to F32 conversion, aka vcvtph2ps
+      // Only for FMA (FMA3) capable hosts:
+      Asse_VFMADD213, // Fused Multiply-Add, aka vfmadd213ss
    }
    AMD64SseOp;
 
@@ -361,7 +361,8 @@ typedef
       Ain_Imm64,       /* Generate 64-bit literal to register */
       Ain_Alu64R,      /* 64-bit mov/arith/logical, dst=REG */
       Ain_Alu64M,      /* 64-bit mov/arith/logical, dst=MEM */
-      Ain_Sh64,        /* 64-bit shift/rotate, dst=REG or MEM */
+      Ain_Sh64,        /* 64-bit shift, dst=REG */
+      Ain_Sh32,        /* 32-bit shift, dst=REG */
       Ain_Test64,      /* 64-bit test (AND, set flags, discard result) */
       Ain_Unary64,     /* 64-bit not and neg */
       Ain_Lea64,       /* 64-bit compute EA into a reg */
@@ -413,6 +414,8 @@ typedef
       //uu Ain_AvxLdSt,     /* AVX load/store 256 bits,
       //uu                     no alignment constraints */
       //uu Ain_AvxReRg,     /* AVX binary general reg-reg, Re, Rg */
+      Ain_Avx32FLo,    /* AVX binary 3 operand, 32F in lowest lane only */
+      Ain_Avx64FLo,    /* AVX binary 3 operand, 64F in lowest lane only */
       Ain_EvCheck,     /* Event check */
       Ain_ProfInc      /* 64-bit profile counter increment */
    }
@@ -443,6 +446,11 @@ typedef
             UInt         src;  /* shift amount, or 0 means %cl */
             HReg         dst;
          } Sh64;
+         struct {
+            AMD64ShiftOp op;
+            UInt         src;  /* shift amount, or 0 means %cl */
+            HReg         dst;
+         } Sh32;
          struct {
             UInt   imm32;
             HReg   dst;
@@ -726,6 +734,18 @@ typedef
          //uu    HReg       dst;
          //uu } AvxReRg;
          struct {
+            AMD64SseOp op;
+            HReg       src1;
+            HReg       src2;
+            HReg       dst;
+         } Avx32FLo;
+         struct {
+            AMD64SseOp op;
+            HReg       src1;
+            HReg       src2;
+            HReg       dst;
+         } Avx64FLo;
+         struct {
             AMD64AMode* amCounter;
             AMD64AMode* amFailAddr;
          } EvCheck;
@@ -746,6 +766,7 @@ extern AMD64Instr* AMD64Instr_Unary64    ( AMD64UnaryOp op, HReg dst );
 extern AMD64Instr* AMD64Instr_Lea64      ( AMD64AMode* am, HReg dst );
 extern AMD64Instr* AMD64Instr_Alu32R     ( AMD64AluOp, AMD64RMI*, HReg );
 extern AMD64Instr* AMD64Instr_Sh64       ( AMD64ShiftOp, UInt, HReg );
+extern AMD64Instr* AMD64Instr_Sh32       ( AMD64ShiftOp, UInt, HReg );
 extern AMD64Instr* AMD64Instr_Test64     ( UInt imm32, HReg dst );
 extern AMD64Instr* AMD64Instr_MulL       ( Bool syned, AMD64RM* );
 extern AMD64Instr* AMD64Instr_Div        ( Bool syned, Int sz, AMD64RM* );
@@ -798,6 +819,8 @@ extern AMD64Instr* AMD64Instr_SseShiftN  ( AMD64SseOp,
 extern AMD64Instr* AMD64Instr_SseMOVQ    ( HReg gpr, HReg xmm, Bool toXMM );
 //uu extern AMD64Instr* AMD64Instr_AvxLdSt    ( Bool isLoad, HReg, AMD64AMode* );
 //uu extern AMD64Instr* AMD64Instr_AvxReRg    ( AMD64SseOp, HReg, HReg );
+extern AMD64Instr* AMD64Instr_Avx32FLo   ( AMD64SseOp, HReg, HReg, HReg );
+extern AMD64Instr* AMD64Instr_Avx64FLo   ( AMD64SseOp, HReg, HReg, HReg );
 extern AMD64Instr* AMD64Instr_EvCheck    ( AMD64AMode* amCounter,
                                            AMD64AMode* amFailAddr );
 extern AMD64Instr* AMD64Instr_ProfInc    ( void );

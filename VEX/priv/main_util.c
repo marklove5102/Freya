@@ -21,9 +21,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-   02110-1301, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 
@@ -545,8 +543,7 @@ UInt vprintf_wrk ( void(*sink)(HChar),
 
 
 /* A general replacement for printf().  Note that only low-level 
-   debugging info should be sent via here.  The official route is to
-   to use vg_message().  This interface is deprecated.
+   debugging info should be sent via here.
 */
 static HChar myprintf_buf[1000];
 static Int   n_myprintf_buf;

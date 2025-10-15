@@ -22,9 +22,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -95,7 +93,7 @@
        memory that falls entirely inside the primary image.
 */
 
-Bool ML_(is_macho_object_file)( const void* buf, SizeT szB )
+Bool ML_(check_macho_and_get_rw_loads)( Int fd, Int* rw_loads )
 {
    /* (JRS: the Mach-O headers might not be in this mapped data,
       because we only mapped a page for this initial check,
@@ -110,19 +108,48 @@ Bool ML_(is_macho_object_file)( const void* buf, SizeT szB )
       can to establish whether or not we're looking at something
       sane. */
 
-   const struct fat_header*  fh_be = buf;
-   const struct MACH_HEADER* mh    = buf;
+   HChar macho_header[sizeof(struct MACH_HEADER)];
+   SysRes preadres = VG_(pread)( fd, macho_header, sizeof(struct MACH_HEADER), 0 );
 
-   vg_assert(buf);
-   if (szB < sizeof(struct fat_header))
+   if (sr_isError(preadres) || sr_Res(preadres) < sizeof(struct MACH_HEADER)) {
       return False;
-   if (VG_(ntohl)(fh_be->magic) == FAT_MAGIC)
-      return True;
+   }
 
-   if (szB < sizeof(struct MACH_HEADER))
-      return False;
-   if (mh->magic == MAGIC)
+   const struct fat_header*  fh_be = (const struct fat_header*)macho_header;
+   const struct MACH_HEADER* mh    = (const struct MACH_HEADER*)macho_header;
+
+   vg_assert(fh_be);
+   vg_assert(mh);
+   vg_assert(rw_loads);
+   STATIC_ASSERT(sizeof(struct fat_header) <= sizeof(struct MACH_HEADER));
+   if (VG_(ntohl)(fh_be->magic) == FAT_MAGIC) {
+      // @todo PJF not yet handled, previous behaviour was to assume that the count is 1
+      *rw_loads = 1;
       return True;
+   }
+
+   if (mh->magic == MAGIC) {
+      HChar* macho_load_commands = ML_(dinfo_zalloc)("di.readmacho.macho_load_commands", mh->sizeofcmds);
+      preadres = VG_(pread)( fd, macho_load_commands, mh->sizeofcmds, sizeof(struct MACH_HEADER) );
+      if (sr_isError(preadres) || sr_Res(preadres) < mh->sizeofcmds) {
+         ML_(dinfo_free)(macho_load_commands);
+         return False;
+      }
+
+      const struct load_command* lc = (const struct load_command*)macho_load_commands;
+      for (unsigned int i = 0U; i < mh->ncmds; ++i) {
+         if (lc->cmd == LC_SEGMENT_CMD) {
+            const struct SEGMENT_COMMAND* sc = (const struct SEGMENT_COMMAND*)lc;
+            if (sc->initprot == 3) {
+              ++*rw_loads;
+            }
+         }
+         const char* tmp = (const char*)lc + lc->cmdsize;
+         lc = (const struct load_command*)tmp;
+      }
+      ML_(dinfo_free)(macho_load_commands);
+      return True;
+   }
 
    return False;
 }
@@ -716,7 +743,6 @@ Bool ML_(read_macho_debug_info)( struct _DebugInfo* di )
    /* This should be ensured by our caller (that we're in the accept
       state). */
    vg_assert(di->fsm.have_rx_map);
-   vg_assert(di->fsm.have_rw_map);
 
    for (i = 0; i < VG_(sizeXA)(di->fsm.maps); i++) {
       const DebugInfoMapping* map = VG_(indexXA)(di->fsm.maps, i);
@@ -728,7 +754,6 @@ Bool ML_(read_macho_debug_info)( struct _DebugInfo* di )
          break;
    }
    vg_assert(rx_map);
-   vg_assert(rw_map);
 
    if (VG_(clo_verbosity) > 1)
       VG_(message)(Vg_DebugMsg,
@@ -1105,10 +1130,20 @@ Bool ML_(read_macho_debug_info)( struct _DebugInfo* di )
          = getsectdata(dsli, "__DWARF", "__debug_line", NULL);
       DiSlice debug_str_mscn
          = getsectdata(dsli, "__DWARF", "__debug_str", NULL);
+      DiSlice debug_line_str_mscn
+         = getsectdata(dsli, "__DWARF", "__debug_line_str", NULL);
       DiSlice debug_ranges_mscn
          = getsectdata(dsli, "__DWARF", "__debug_ranges", NULL);
+      DiSlice debug_rnglists_mscn
+         = getsectdata(dsli, "__DWARF", "__debug_rnglists", NULL);
+      DiSlice debug_loclists_mscn
+         = getsectdata(dsli, "__DWARF", "__debug_loclists", NULL);
       DiSlice debug_loc_mscn
          = getsectdata(dsli, "__DWARF", "__debug_loc", NULL);
+      DiSlice debug_addr_mscn
+         = getsectdata(dsli, "__DWARF", "__debug_addr", NULL);
+      DiSlice debug_str_offsets_mscn
+         = getsectdata(dsli, "__DWARF", "__debug_str_offsets", NULL);
 
       /* It appears (jrs, 2014-oct-19) that section "__eh_frame" in
          segment "__TEXT" appears in both the main and dsym files, but
@@ -1147,7 +1182,8 @@ Bool ML_(read_macho_debug_info)( struct _DebugInfo* di )
                                       debug_abbv_mscn,
                                       debug_line_mscn,
                                       debug_str_mscn,
-                                      DiSlice_INVALID /* ALT .debug_str */ );
+                                      DiSlice_INVALID, /* ALT .debug_str */
+                                      debug_line_str_mscn );
 
          /* The new reader: read the DIEs in .debug_info to acquire
             information on variable types and locations or inline info.
@@ -1162,11 +1198,16 @@ Bool ML_(read_macho_debug_info)( struct _DebugInfo* di )
                    debug_line_mscn,
                    debug_str_mscn,
                    debug_ranges_mscn,
+                   debug_rnglists_mscn,
+                   debug_loclists_mscn,
                    debug_loc_mscn,
                    DiSlice_INVALID, /* ALT .debug_info */
                    DiSlice_INVALID, /* ALT .debug_abbv */
                    DiSlice_INVALID, /* ALT .debug_line */
-                   DiSlice_INVALID  /* ALT .debug_str */
+                   DiSlice_INVALID, /* ALT .debug_str */
+                   debug_line_str_mscn,  /* .debug_line_str */
+                   debug_addr_mscn,
+                   debug_str_offsets_mscn
             );
          }
       }

@@ -23,9 +23,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -556,7 +554,7 @@ static SyscallTableEntry syscall_main_table[] = {
    GENX_(__NR_write,             sys_write),          // 4
 
    GENXY(__NR_open,              sys_open),           // 5
-   GENXY(__NR_close,             sys_close),          // 6
+   GENX_(__NR_close,             sys_close),          // 6
 //   GENXY(__NR_waitpid,           sys_waitpid),        // 7
    GENXY(__NR_creat,             sys_creat),          // 8
    GENX_(__NR_link,              sys_link),           // 9
@@ -651,7 +649,7 @@ static SyscallTableEntry syscall_main_table[] = {
    GENX_(__NR_symlink,           sys_symlink),        // 83
 //zz    //   (__NR_oldlstat,          sys_lstat),          // 84 -- obsolete
 //zz 
-   GENX_(__NR_readlink,          sys_readlink),       // 85
+   GENXY(__NR_readlink,          sys_readlink),       // 85
 //zz    //   (__NR_uselib,            sys_uselib),         // 86 */Linux
 //zz    //   (__NR_swapon,            sys_swapon),         // 87 */Linux
 //zz    //   (__NR_reboot,            sys_reboot),         // 88 */Linux
@@ -697,7 +695,7 @@ static SyscallTableEntry syscall_main_table[] = {
 //zz    //   (__NR_setdomainname,     sys_setdomainname),  // 121 */*(?)
    GENXY(__NR_uname,             sys_newuname),       // 122
 //   PLAX_(__NR_modify_ldt,        sys_modify_ldt),     // 123
-//zz    LINXY(__NR_adjtimex,          sys_adjtimex),       // 124
+   LINXY(__NR_adjtimex,          sys_adjtimex),       // 124
 //zz 
    GENXY(__NR_mprotect,          sys_mprotect),       // 125
    LINXY(__NR_sigprocmask,       sys_sigprocmask),    // 126
@@ -744,7 +742,7 @@ static SyscallTableEntry syscall_main_table[] = {
    LINX_(__NR_sched_get_priority_max, sys_sched_get_priority_max),// 159
 
    LINX_(__NR_sched_get_priority_min, sys_sched_get_priority_min),// 160
-//zz    //LINX?(__NR_sched_rr_get_interval,  sys_sched_rr_get_interval), // 161 */*
+   LINXY(__NR_sched_rr_get_interval,  sys_sched_rr_get_interval), // 161
    GENXY(__NR_nanosleep,         sys_nanosleep),      // 162
    GENX_(__NR_mremap,            sys_mremap),         // 163
    LINX_(__NR_setresuid,         sys_setresuid16),    // 164
@@ -924,7 +922,7 @@ static SyscallTableEntry syscall_main_table[] = {
 //   LINX_(__NR_ioprio_set,        sys_ioprio_set),     // 289
 
 //   LINX_(__NR_ioprio_get,        sys_ioprio_get),     // 290
-   LINX_(__NR_inotify_init,    sys_inotify_init),   // 291
+   LINXY(__NR_inotify_init,    sys_inotify_init),   // 291
    LINX_(__NR_inotify_add_watch, sys_inotify_add_watch), // 292
    LINX_(__NR_inotify_rm_watch,    sys_inotify_rm_watch), // 293
 //   LINX_(__NR_migrate_pages,    sys_migrate_pages),    // 294
@@ -941,7 +939,7 @@ static SyscallTableEntry syscall_main_table[] = {
    LINX_(__NR_linkat,       sys_linkat),           // 303
    LINX_(__NR_symlinkat,    sys_symlinkat),        // 304
 
-   LINX_(__NR_readlinkat,    sys_readlinkat),       // 
+   LINXY(__NR_readlinkat,    sys_readlinkat),       // 
    LINX_(__NR_fchmodat,       sys_fchmodat),         //
    LINX_(__NR_faccessat,    sys_faccessat),        //
    LINXY(__NR_shmat,             sys_shmat),       //305
@@ -959,7 +957,6 @@ static SyscallTableEntry syscall_main_table[] = {
 //   LINX_(__NR_tee,               sys_ni_syscall),       // 315
 //   LINX_(__NR_vmsplice,          sys_ni_syscall),       // 316
    LINXY(__NR_move_pages,        sys_move_pages),       // 317
-//   LINX_(__NR_getcpu,            sys_ni_syscall),       // 318
 
    LINX_(__NR_utimensat,         sys_utimensat),        // 320
    LINXY(__NR_signalfd,          sys_signalfd),         // 321
@@ -983,6 +980,7 @@ static SyscallTableEntry syscall_main_table[] = {
    LINXY(__NR_pselect6,          sys_pselect6),         // 335
    LINXY(__NR_ppoll,             sys_ppoll),            // 336
 
+   LINXY(__NR_getcpu,            sys_getcpu),           // 345
    LINXY(__NR_epoll_pwait,       sys_epoll_pwait),      // 346
 
    LINX_(__NR_fallocate,         sys_fallocate),        // 352
@@ -1007,16 +1005,75 @@ static SyscallTableEntry syscall_main_table[] = {
    LINXY(__NR_clock_adjtime,     sys_clock_adjtime),    // 372
    LINX_(__NR_syncfs,            sys_syncfs),           // 373
    LINXY(__NR_sendmmsg,          sys_sendmmsg),         // 374
-
+   LINX_(__NR_setns,             sys_setns),            // 375
    LINXY(__NR_process_vm_readv,  sys_process_vm_readv), // 376
    LINX_(__NR_process_vm_writev, sys_process_vm_writev),// 377
+   LINX_(__NR_kcmp,              sys_kcmp),             // 378
 
+   LINX_(__NR_sched_setattr,     sys_sched_setattr),    // 380
+   LINXY(__NR_sched_getattr,     sys_sched_getattr),    // 381
    LINX_(__NR_renameat2,         sys_renameat2),        // 382
 
    LINXY(__NR_getrandom,         sys_getrandom),        // 384
    LINXY(__NR_memfd_create,      sys_memfd_create),     // 385
 
+   LINX_(__NR_execveat,          sys_execveat),         // 387
+
+   LINXY(__NR_userfaultfd,       sys_userfaultfd),      // 388
+   LINX_(__NR_membarrier,        sys_membarrier),       // 389
+   GENX_(__NR_mlock2,            sys_mlock2),           // 390
+   LINX_(__NR_copy_file_range,   sys_copy_file_range),  // 391
+   LINXY(__NR_preadv2,           sys_preadv2),          // 392
+   LINX_(__NR_pwritev2,          sys_pwritev2),         // 393
+
    LINXY(__NR_statx,             sys_statx),            // 397
+   GENX_(__NR_rseq,              sys_ni_syscall),       // 398
+
+   LINXY(__NR_clock_gettime64,   sys_clock_gettime64),  // 403
+   LINX_(__NR_clock_settime64,   sys_clock_settime64),  // 404
+
+   LINXY(__NR_clock_getres_time64, sys_clock_getres_time64), // 406
+   LINXY(__NR_clock_nanosleep_time64, sys_clock_nanosleep_time64), // 407
+   LINXY(__NR_timer_gettime64,   sys_timer_gettime64),  // 408
+   LINXY(__NR_timer_settime64,   sys_timer_settime64),  // 409
+   LINXY(__NR_timerfd_gettime64, sys_timerfd_gettime64),// 410
+   LINXY(__NR_timerfd_settime64, sys_timerfd_settime64),// 411
+   LINX_(__NR_utimensat_time64,  sys_utimensat_time64), // 412
+   LINXY(__NR_pselect6_time64,   sys_pselect6_time64),  // 413
+   LINXY(__NR_ppoll_time64,      sys_ppoll_time64),     // 414
+
+   LINXY(__NR_recvmmsg_time64,   sys_recvmmsg_time64),  // 417
+   LINX_(__NR_mq_timedsend_time64, sys_mq_timedsend_time64), // 418
+   LINXY(__NR_mq_timedreceive_time64, sys_mq_timedreceive_time64), // 419
+   LINX_(__NR_semtimedop_time64, sys_semtimedop_time64),// 420
+   LINXY(__NR_rt_sigtimedwait_time64, sys_rt_sigtimedwait_time64), // 421
+   LINXY(__NR_futex_time64,      sys_futex_time64),     // 422
+   LINXY(__NR_sched_rr_get_interval_time64,
+         sys_sched_rr_get_interval_time64),             // 423
+
+   LINXY(__NR_io_uring_setup,    sys_io_uring_setup),    // 425
+   LINXY(__NR_io_uring_enter,    sys_io_uring_enter),    // 426
+   LINXY(__NR_io_uring_register, sys_io_uring_register), // 427
+   LINXY(__NR_open_tree,         sys_open_tree),         // 428
+   LINX_(__NR_move_mount,        sys_move_mount),        // 429
+   LINXY(__NR_fsopen,            sys_fsopen),            // 430
+   LINX_(__NR_fsconfig,          sys_fsconfig),          // 431
+   LINXY(__NR_fsmount,           sys_fsmount),           // 432
+   LINXY(__NR_fspick,            sys_fspick),            // 433
+   LINXY(__NR_pidfd_open,        sys_pidfd_open),        // 434
+   GENX_(__NR_clone3,            sys_ni_syscall),        // 435
+   LINXY(__NR_close_range,       sys_close_range),       // 436
+   LINXY(__NR_openat2,           sys_openat2),           // 437
+   LINXY(__NR_pidfd_getfd,       sys_pidfd_getfd),       // 438
+   LINX_(__NR_faccessat2,    sys_faccessat2),           // 439
+
+   LINXY(__NR_epoll_pwait2,      sys_epoll_pwait2),      // 441
+
+   LINXY(__NR_landlock_create_ruleset, sys_landlock_create_ruleset), // 444
+   LINX_(__NR_landlock_add_rule,       sys_landlock_add_rule),       // 445
+   LINX_(__NR_landlock_restrict_self,  sys_landlock_restrict_self),  // 446
+
+   LINX_(__NR_fchmodat2,         sys_fchmodat2),         // 452
 };
 
 

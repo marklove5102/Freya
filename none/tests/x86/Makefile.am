@@ -5,10 +5,8 @@ dist_noinst_SCRIPTS = filter_cpuid filter_inf_nan filter_stderr gen_insn_test.pl
 
 CLEANFILES = $(addsuffix .c,$(INSN_TESTS))
 
-INSN_TESTS = insn_basic insn_cmov insn_mmx insn_mmxext
+INSN_TESTS = insn_basic insn_cmov insn_mmx insn_mmxext insn_sse insn_sse2
 
-if !COMPILER_IS_CLANG
-   INSN_TESTS += insn_sse insn_sse2
 if BUILD_SSSE3_TESTS
    INSN_TESTS += insn_ssse3
 endif
@@ -16,7 +14,6 @@ if BUILD_SSE3_TESTS
 if !SOLARIS_SUN_STUDIO_AS
 # Sun Studio assembler fails to build some tests (illegal mnemonic).
    INSN_TESTS += insn_sse3
-endif
 endif
 endif
 
@@ -35,6 +32,7 @@ EXTRA_DIST = \
 	aad_aam.stdout.exp aad_aam.stderr.exp aad_aam.vgtest \
 	badseg.stderr.exp badseg.stdout.exp badseg.stdout.exp-solaris \
 	badseg.vgtest \
+	bswapw.stderr.exp bswapw.stdout.exp bswapw.vgtest \
 	bt_everything.stderr.exp bt_everything.stdout.exp bt_everything.vgtest \
 	bt_literal.stderr.exp bt_literal.stdout.exp bt_literal.vgtest \
 	bug125959-x86.stderr.exp bug125959-x86.stdout.exp bug125959-x86.vgtest \
@@ -54,6 +52,7 @@ EXTRA_DIST = \
 	fxtract.stdout.exp fxtract.stderr.exp fxtract.vgtest \
 	fxtract.stdout.exp-older-glibc \
 	getseg.stdout.exp getseg.stderr.exp getseg.vgtest \
+	gnu_binutils_nop.stderr.exp gnu_binutils_nop.vgtest \
 	incdec_alt.stdout.exp incdec_alt.stderr.exp incdec_alt.vgtest \
 	int.stderr.exp int.stdout.exp int.disabled \
 	$(addsuffix .stderr.exp,$(INSN_TESTS)) \
@@ -76,6 +75,7 @@ EXTRA_DIST = \
 	smc1.stderr.exp smc1.stdout.exp smc1.vgtest \
 	ssse3_misaligned.stderr.exp ssse3_misaligned.stdout.exp \
 	ssse3_misaligned.vgtest ssse3_misaligned.c \
+	sse4-x86.stdout.exp sse4-x86.stderr.exp sse4-x86.vgtest \
 	x86locked.vgtest x86locked.stdout.exp x86locked.stderr.exp \
 	x87trigOOR.vgtest x87trigOOR.stdout.exp x87trigOOR.stderr.exp \
 	yield.stderr.exp yield.stdout.exp yield.disabled \
@@ -85,6 +85,7 @@ check_PROGRAMS = \
 	aad_aam \
 	allexec \
 	badseg \
+	bswapw \
 	bt_everything \
 	bt_literal \
 	bug125959-x86 \
@@ -101,6 +102,7 @@ check_PROGRAMS = \
 	fpu_lazy_eflags \
 	fxtract \
 	getseg \
+	gnu_binutils_nop \
 	incdec_alt \
 	$(INSN_TESTS) \
 	int \
@@ -117,6 +119,9 @@ check_PROGRAMS = \
 	xadd
 if BUILD_SSSE3_TESTS
    check_PROGRAMS += ssse3_misaligned
+endif
+if BUILD_SSE42_TESTS
+   check_PROGRAMS += sse4-x86
 endif
 if BUILD_LZCNT_TESTS
  check_PROGRAMS += lzcnt32
@@ -181,5 +186,5 @@ insn_ssse3_LDADD	= -lm
 x86locked_CFLAGS	= $(AM_CFLAGS) -O
 yield_LDADD		= -lpthread
 
-.def.c: $(srcdir)/gen_insn_test.pl
+.def.c:
 	$(PERL) $(srcdir)/gen_insn_test.pl < $< > $@

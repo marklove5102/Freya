@@ -21,9 +21,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-   02110-1301, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 
@@ -1348,7 +1346,6 @@ static void jmp_lit( /*MOD*/DisResult* dres,
 {
    vassert(dres->whatNext    == Dis_Continue);
    vassert(dres->len         == 0);
-   vassert(dres->continueAt  == 0);
    vassert(dres->jk_StopHere == Ijk_INVALID);
    dres->whatNext    = Dis_StopHere;
    dres->jk_StopHere = kind;
@@ -1360,7 +1357,6 @@ static void jmp_treg( /*MOD*/DisResult* dres,
 {
    vassert(dres->whatNext    == Dis_Continue);
    vassert(dres->len         == 0);
-   vassert(dres->continueAt  == 0);
    vassert(dres->jk_StopHere == Ijk_INVALID);
    dres->whatNext    = Dis_StopHere;
    dres->jk_StopHere = kind;
@@ -1375,7 +1371,6 @@ void jcc_01( /*MOD*/DisResult* dres,
    X86Condcode condPos;
    vassert(dres->whatNext    == Dis_Continue);
    vassert(dres->len         == 0);
-   vassert(dres->continueAt  == 0);
    vassert(dres->jk_StopHere == Ijk_INVALID);
    dres->whatNext    = Dis_StopHere;
    dres->jk_StopHere = Ijk_Boring;
@@ -8072,9 +8067,6 @@ static IRTemp math_BSWAP ( IRTemp t1, IRType ty )
 static
 DisResult disInstr_X86_WRK (
              /*OUT*/Bool* expect_CAS,
-             Bool         (*resteerOkFn) ( /*opaque*/void*, Addr ),
-             Bool         resteerCisOk,
-             void*        callback_opaque,
              Long         delta64,
              const VexArchInfo* archinfo,
              const VexAbiInfo*  vbi,
@@ -8113,7 +8105,6 @@ DisResult disInstr_X86_WRK (
    /* Set result defaults. */
    dres.whatNext    = Dis_Continue;
    dres.len         = 0;
-   dres.continueAt  = 0;
    dres.hint        = Dis_HintNone;
    dres.jk_StopHere = Ijk_INVALID;
 
@@ -8207,7 +8198,7 @@ DisResult disInstr_X86_WRK (
          delta += 5;
          goto decode_success;
       }
-      /* Don't barf on recent binutils padding,
+      /* Don't barf on recent (2010) binutils padding,
          all variants of which are: nopw %cs:0x0(%eax,%eax,1)
          66 2e 0f 1f 84 00 00 00 00 00
          66 66 2e 0f 1f 84 00 00 00 00 00
@@ -8228,6 +8219,26 @@ DisResult disInstr_X86_WRK (
              && code[data16_cnt + 8] == 0x00 ) {
             DIP("nopw %%cs:0x0(%%eax,%%eax,1)\n");
             delta += 9 + data16_cnt;
+            goto decode_success;
+         }
+      }
+
+      /* bug478624 GNU binutils uses a leal of esi into itself with
+         a zero offset and CS prefix as an 8 byte no-op (Dec 2023).
+         Since the CS prefix is hardly ever used we don't do much
+         to decode it, just a few cases for conditional branches.
+         So add handling here with other pseudo-no-ops.
+       */
+      if (code[0] == 0x2E && code[1] == 0x8D) {
+         if (code[2] == 0x74 && code[3] == 0x26 && code[4] == 0x00) {
+            DIP("leal %%cs:0(%%esi,%%eiz,1),%%esi\n");
+            delta += 5;
+            goto decode_success;
+         }
+         if (code[2] == 0xB4 && code[3] == 0x26 && code[4] == 0x00
+             && code[5] == 0x00 && code[6] == 0x00 && code[7] == 0x00) {
+            DIP("leal %%cs:0(%%esi,%%eiz,1),%%esi\n");
+            delta += 8;
             goto decode_success;
          }
       }
@@ -12930,6 +12941,62 @@ DisResult disInstr_X86_WRK (
    /* --- start of the SSE4 decoder                    --- */
    /* ---------------------------------------------------- */
 
+   /* 66 0F 3A 22 /r ib = PINSRD xmm1, r/m32, imm8
+      Extract Doubleword int from gen.reg/mem32 and insert into xmm1 */
+   if ( sz == 2
+        && insn[0] == 0x0F && insn[1] == 0x3A && insn[2] == 0x22 ) {
+
+      Int imm8_10;
+      IRTemp src_elems = newTemp(Ity_I32);
+      IRTemp src_vec   = newTemp(Ity_V128);
+      IRTemp z32       = newTemp(Ity_I32);
+
+      modrm = insn[3];
+
+      if ( epartIsReg( modrm ) ) {
+         imm8_10 = (Int)(insn[3+1] & 3);
+         assign( src_elems, getIReg( 4, eregOfRM(modrm) ) );
+         delta += 3+1+1;
+         DIP( "pinsrd $%d, %s,%s\n", imm8_10,
+              nameIReg( 4, eregOfRM(modrm) ),
+              nameXMMReg( gregOfRM(modrm) ) );
+      } else {
+         addr = disAMode( &alen, sorb, delta+3, dis_buf );
+         imm8_10 = (Int)(insn[3+alen] & 3);
+         assign( src_elems, loadLE( Ity_I32, mkexpr(addr) ) );
+         delta += 3+alen+1;
+         DIP( "pinsrd $%d, %s,%s\n", 
+              imm8_10, dis_buf, nameXMMReg( gregOfRM(modrm) ) );
+      }
+
+      assign(z32, mkU32(0));
+
+      UShort mask = 0;
+      switch (imm8_10) {
+         case 3:  mask = 0x0FFF;
+                  assign(src_vec, mk128from32s(src_elems, z32, z32, z32));
+                  break;
+         case 2:  mask = 0xF0FF;
+                  assign(src_vec, mk128from32s(z32, src_elems, z32, z32));
+                  break;
+         case 1:  mask = 0xFF0F;
+                  assign(src_vec, mk128from32s(z32, z32, src_elems, z32));
+                  break;
+         case 0:  mask = 0xFFF0;
+                  assign(src_vec, mk128from32s(z32, z32, z32, src_elems));
+                  break;
+         default: vassert(0);
+      }
+
+      putXMMReg( gregOfRM(modrm), 
+                 binop( Iop_OrV128, mkexpr(src_vec),
+                        binop( Iop_AndV128, 
+                               getXMMReg( gregOfRM(modrm) ),
+                               mkV128(mask) ) ) );
+
+      goto decode_success;
+   }
+
    /* 66 0F 3A 0B /r ib = ROUNDSD imm8, xmm2/m64, xmm1
       (Partial implementation only -- only deal with cases where
       the rounding mode is specified directly by the immediate byte.)
@@ -13145,14 +13212,8 @@ DisResult disInstr_X86_WRK (
          assign(t1, binop(Iop_Sub32, getIReg(4,R_ESP), mkU32(4)));
          putIReg(4, R_ESP, mkexpr(t1));
          storeLE( mkexpr(t1), mkU32(guest_EIP_bbstart+delta));
-         if (resteerOkFn( callback_opaque, (Addr32)d32 )) {
-            /* follow into the call target. */
-            dres.whatNext   = Dis_ResteerU;
-            dres.continueAt = (Addr32)d32;
-         } else {
-            jmp_lit(&dres, Ijk_Call, d32);
-            vassert(dres.whatNext == Dis_StopHere);
-         }
+         jmp_lit(&dres, Ijk_Call, d32);
+         vassert(dres.whatNext == Dis_StopHere);
          DIP("call 0x%x\n",d32);
       }
       break;
@@ -13462,13 +13523,8 @@ DisResult disInstr_X86_WRK (
    case 0xEB: /* Jb (jump, byte offset) */
       d32 = (((Addr32)guest_EIP_bbstart)+delta+1) + getSDisp8(delta); 
       delta++;
-      if (resteerOkFn( callback_opaque, (Addr32)d32) ) {
-         dres.whatNext   = Dis_ResteerU;
-         dres.continueAt = (Addr32)d32;
-      } else {
-         jmp_lit(&dres, Ijk_Boring, d32);
-         vassert(dres.whatNext == Dis_StopHere);
-      }
+      jmp_lit(&dres, Ijk_Boring, d32);
+      vassert(dres.whatNext == Dis_StopHere);
       DIP("jmp-8 0x%x\n", d32);
       break;
 
@@ -13476,13 +13532,8 @@ DisResult disInstr_X86_WRK (
       vassert(sz == 4); /* JRS added 2004 July 11 */
       d32 = (((Addr32)guest_EIP_bbstart)+delta+sz) + getSDisp(sz,delta); 
       delta += sz;
-      if (resteerOkFn( callback_opaque, (Addr32)d32) ) {
-         dres.whatNext   = Dis_ResteerU;
-         dres.continueAt = (Addr32)d32;
-      } else {
-         jmp_lit(&dres, Ijk_Boring, d32);
-         vassert(dres.whatNext == Dis_StopHere);
-      }
+      jmp_lit(&dres, Ijk_Boring, d32);
+      vassert(dres.whatNext == Dis_StopHere);
       DIP("jmp 0x%x\n", d32);
       break;
 
@@ -13508,53 +13559,10 @@ DisResult disInstr_X86_WRK (
       vassert(-128 <= jmpDelta && jmpDelta < 128);
       d32 = (((Addr32)guest_EIP_bbstart)+delta+1) + jmpDelta; 
       delta++;
-      if (resteerCisOk
-          && vex_control.guest_chase_cond
-          && (Addr32)d32 != (Addr32)guest_EIP_bbstart
-          && jmpDelta < 0
-          && resteerOkFn( callback_opaque, (Addr32)d32) ) {
-         /* Speculation: assume this backward branch is taken.  So we
-            need to emit a side-exit to the insn following this one,
-            on the negation of the condition, and continue at the
-            branch target address (d32).  If we wind up back at the
-            first instruction of the trace, just stop; it's better to
-            let the IR loop unroller handle that case. */
-         stmt( IRStmt_Exit( 
-                  mk_x86g_calculate_condition((X86Condcode)(1 ^ (opc - 0x70))),
-                  Ijk_Boring,
-                  IRConst_U32(guest_EIP_bbstart+delta),
-                  OFFB_EIP ) );
-         dres.whatNext   = Dis_ResteerC;
-         dres.continueAt = (Addr32)d32;
-         comment = "(assumed taken)";
-      }
-      else
-      if (resteerCisOk
-          && vex_control.guest_chase_cond
-          && (Addr32)d32 != (Addr32)guest_EIP_bbstart
-          && jmpDelta >= 0
-          && resteerOkFn( callback_opaque, 
-                          (Addr32)(guest_EIP_bbstart+delta)) ) {
-         /* Speculation: assume this forward branch is not taken.  So
-            we need to emit a side-exit to d32 (the dest) and continue
-            disassembling at the insn immediately following this
-            one. */
-         stmt( IRStmt_Exit( 
-                  mk_x86g_calculate_condition((X86Condcode)(opc - 0x70)),
-                  Ijk_Boring,
-                  IRConst_U32(d32),
-                  OFFB_EIP ) );
-         dres.whatNext   = Dis_ResteerC;
-         dres.continueAt = guest_EIP_bbstart + delta;
-         comment = "(assumed not taken)";
-      }
-      else {
-         /* Conservative default translation - end the block at this
-            point. */
-         jcc_01( &dres, (X86Condcode)(opc - 0x70), 
-                 (Addr32)(guest_EIP_bbstart+delta), d32);
-         vassert(dres.whatNext == Dis_StopHere);
-      }
+      /* End the block at this point. */
+      jcc_01( &dres, (X86Condcode)(opc - 0x70), 
+              (Addr32)(guest_EIP_bbstart+delta), d32);
+      vassert(dres.whatNext == Dis_StopHere);
       DIP("j%s-8 0x%x %s\n", name_X86Condcode(opc - 0x70), d32, comment);
       break;
     }
@@ -14744,15 +14752,21 @@ DisResult disInstr_X86_WRK (
       case 0xCD:
       case 0xCE:
       case 0xCF: /* BSWAP %edi */
-         /* AFAICS from the Intel docs, this only exists at size 4. */
-         if (sz != 4) goto decode_failure;
-         
-         t1 = newTemp(Ity_I32);
-         assign( t1, getIReg(4, opc-0xC8) );
-         t2 = math_BSWAP(t1, Ity_I32);
-
-         putIReg(4, opc-0xC8, mkexpr(t2));
-         DIP("bswapl %s\n", nameIReg(4, opc-0xC8));
+         /* According to the Intel and AMD docs, 16-bit BSWAP is undefined.
+          * However, the result of a 16-bit BSWAP is always zero in every Intel
+          * and AMD CPU, and some software depends on this behavior. */
+         if (sz == 2) {
+            putIReg(2, opc-0xC8, mkU16(0));
+            DIP("bswapw %s\n", nameIReg(2, opc-0xC8));
+         } else if (sz == 4) {
+            t1 = newTemp(Ity_I32);
+            assign( t1, getIReg(4, opc-0xC8) );
+            t2 = math_BSWAP(t1, Ity_I32);
+            putIReg(4, opc-0xC8, mkexpr(t2));
+            DIP("bswapl %s\n", nameIReg(4, opc-0xC8));
+         } else {
+            goto decode_failure;
+         }
          break;
 
       /* =-=-=-=-=-=-=-=-=- BT/BTS/BTR/BTC =-=-=-=-=-=-= */
@@ -15077,54 +15091,10 @@ DisResult disInstr_X86_WRK (
          jmpDelta = (Int)getUDisp32(delta);
          d32 = (((Addr32)guest_EIP_bbstart)+delta+4) + jmpDelta;
          delta += 4;
-         if (resteerCisOk
-             && vex_control.guest_chase_cond
-             && (Addr32)d32 != (Addr32)guest_EIP_bbstart
-             && jmpDelta < 0
-             && resteerOkFn( callback_opaque, (Addr32)d32) ) {
-            /* Speculation: assume this backward branch is taken.  So
-               we need to emit a side-exit to the insn following this
-               one, on the negation of the condition, and continue at
-               the branch target address (d32).  If we wind up back at
-               the first instruction of the trace, just stop; it's
-               better to let the IR loop unroller handle that case.*/
-            stmt( IRStmt_Exit( 
-                     mk_x86g_calculate_condition((X86Condcode)
-                                                 (1 ^ (opc - 0x80))),
-                     Ijk_Boring,
-                     IRConst_U32(guest_EIP_bbstart+delta),
-                     OFFB_EIP ) );
-            dres.whatNext   = Dis_ResteerC;
-            dres.continueAt = (Addr32)d32;
-            comment = "(assumed taken)";
-         }
-         else
-         if (resteerCisOk
-             && vex_control.guest_chase_cond
-             && (Addr32)d32 != (Addr32)guest_EIP_bbstart
-             && jmpDelta >= 0
-             && resteerOkFn( callback_opaque, 
-                             (Addr32)(guest_EIP_bbstart+delta)) ) {
-            /* Speculation: assume this forward branch is not taken.
-               So we need to emit a side-exit to d32 (the dest) and
-               continue disassembling at the insn immediately
-               following this one. */
-            stmt( IRStmt_Exit( 
-                     mk_x86g_calculate_condition((X86Condcode)(opc - 0x80)),
-                     Ijk_Boring,
-                     IRConst_U32(d32),
-                     OFFB_EIP ) );
-            dres.whatNext   = Dis_ResteerC;
-            dres.continueAt = guest_EIP_bbstart + delta;
-            comment = "(assumed not taken)";
-         }
-         else {
-            /* Conservative default translation - end the block at
-               this point. */
-            jcc_01( &dres, (X86Condcode)(opc - 0x80), 
-                    (Addr32)(guest_EIP_bbstart+delta), d32);
-            vassert(dres.whatNext == Dis_StopHere);
-         }
+         /* End the block at this point. */
+         jcc_01( &dres, (X86Condcode)(opc - 0x80), 
+                 (Addr32)(guest_EIP_bbstart+delta), d32);
+         vassert(dres.whatNext == Dis_StopHere);
          DIP("j%s-32 0x%x %s\n", name_X86Condcode(opc - 0x80), d32, comment);
          break;
        }
@@ -15464,10 +15434,6 @@ DisResult disInstr_X86_WRK (
       case Dis_Continue:
          stmt( IRStmt_Put( OFFB_EIP, mkU32(guest_EIP_bbstart + delta) ) );
          break;
-      case Dis_ResteerU:
-      case Dis_ResteerC:
-         stmt( IRStmt_Put( OFFB_EIP, mkU32(dres.continueAt) ) );
-         break;
       case Dis_StopHere:
          break;
       default:
@@ -15491,9 +15457,6 @@ DisResult disInstr_X86_WRK (
    is located in host memory at &guest_code[delta]. */
 
 DisResult disInstr_X86 ( IRSB*        irsb_IN,
-                         Bool         (*resteerOkFn) ( void*, Addr ),
-                         Bool         resteerCisOk,
-                         void*        callback_opaque,
                          const UChar* guest_code_IN,
                          Long         delta,
                          Addr         guest_IP,
@@ -15517,9 +15480,7 @@ DisResult disInstr_X86 ( IRSB*        irsb_IN,
 
    x1 = irsb_IN->stmts_used;
    expect_CAS = False;
-   dres = disInstr_X86_WRK ( &expect_CAS, resteerOkFn,
-                             resteerCisOk,
-                             callback_opaque,
+   dres = disInstr_X86_WRK ( &expect_CAS,
                              delta, archinfo, abiinfo, sigill_diag_IN );
    x2 = irsb_IN->stmts_used;
    vassert(x2 >= x1);
@@ -15537,9 +15498,7 @@ DisResult disInstr_X86 ( IRSB*        irsb_IN,
       /* inconsistency detected.  re-disassemble the instruction so as
          to generate a useful error message; then assert. */
       vex_traceflags |= VEX_TRACE_FE;
-      dres = disInstr_X86_WRK ( &expect_CAS, resteerOkFn,
-                                resteerCisOk,
-                                callback_opaque,
+      dres = disInstr_X86_WRK ( &expect_CAS,
                                 delta, archinfo, abiinfo, sigill_diag_IN );
       for (i = x1; i < x2; i++) {
          vex_printf("\t\t");

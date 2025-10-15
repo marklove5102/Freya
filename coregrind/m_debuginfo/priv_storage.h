@@ -23,9 +23,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -356,7 +354,20 @@ typedef
       Int   f7_off;
    }
    DiCfSI_m;
-#elif defined(VGA_mips32) || defined(VGA_mips64)
+#elif defined(VGA_mips32) || defined(VGA_mips64) || defined(VGA_nanomips)
+typedef
+   struct {
+      UChar cfa_how; /* a CFIC_ value */
+      UChar ra_how;  /* a CFIR_ value */
+      UChar sp_how;  /* a CFIR_ value */
+      UChar fp_how;  /* a CFIR_ value */
+      Int   cfa_off;
+      Int   ra_off;
+      Int   sp_off;
+      Int   fp_off;
+   }
+   DiCfSI_m;
+#elif defined(VGA_riscv64)
 typedef
    struct {
       UChar cfa_how; /* a CFIC_ value */
@@ -417,7 +428,9 @@ typedef
       Creg_ARM_R15,
       Creg_ARM_R14,
       Creg_ARM_R7,
+      Creg_ARM64_SP,
       Creg_ARM64_X30,
+      Creg_ARM64_X29,
       Creg_S390_IA,
       Creg_S390_SP,
       Creg_S390_FP,
@@ -541,9 +554,9 @@ ML_(cmp_for_DiAddrRange_range) ( const void* keyV, const void* elemV );
    essentially an ultra-trivial finite state machine which, when it
    reaches an accept state, signals that we should now read debug info
    from the object into the associated struct _DebugInfo.  The accept
-   state is arrived at when have_rx_map and have_rw_map both become
-   true.  The initial state is one in which we have no observations,
-   so have_rx_map and have_rw_map are both false.
+   state is arrived at when have_rx_map is true and rw_map_count
+   is 1 or 2.  The initial state is one in which we have no observations,
+   so have_rx_map is false and rw_map_count is 0.
 
    This all started as a rather ad-hoc solution, but was further
    expanded to handle weird object layouts, e.g. more than one rw
@@ -577,6 +590,9 @@ typedef struct
    SizeT size; /* and map address of each mapping             */
    OffT  foff;
    Bool  rx, rw, ro;  /* memory access flags for this mapping */
+#if defined(VGO_freebsd)
+   Bool ignore_foff;
+#endif
 } DebugInfoMapping;
 
 struct _DebugInfoFSM
@@ -585,7 +601,7 @@ struct _DebugInfoFSM
    HChar*  dbgname;   /* in mallocville (VG_AR_DINFO)               */
    XArray* maps;      /* XArray of DebugInfoMapping structs         */
    Bool  have_rx_map; /* did we see a r?x mapping yet for the file? */
-   Bool  have_rw_map; /* did we see a rw? mapping yet for the file? */
+   Int   rw_map_count; /* count of w? mappings seen (may be > 1 )   */
    Bool  have_ro_map; /* did we see a r-- mapping yet for the file? */
 };
 
@@ -677,6 +693,13 @@ struct _DebugInfo {
    /* If have_dinfo is False, then all fields below this point are
       invalid and should not be consulted. */
    Bool  have_dinfo; /* initially False */
+
+   /* If true then the reading of .debug_* section has been deferred
+      until it this information is required (such as when printing
+      a stacktrace).  Additionally, if true then the reading of any
+      separate debuginfo files associated with this object has also
+      been deferred. */
+   Bool deferred;
 
    /* All the rest of the fields in this structure are filled in once
       we have committed to reading the symbols and debug info (that
@@ -1155,16 +1178,16 @@ extern void ML_(finish_CFSI_arrays) ( struct _DebugInfo* di );
 
 /* Find a symbol-table index containing the specified pointer, or -1
    if not found.  Binary search.  */
-extern Word ML_(search_one_symtab) ( const DebugInfo* di, Addr ptr,
+extern Word ML_(search_one_symtab) ( DebugInfo* di, Addr ptr,
                                      Bool findText );
 
 /* Find a location-table index containing the specified pointer, or -1
    if not found.  Binary search.  */
-extern Word ML_(search_one_loctab) ( const DebugInfo* di, Addr ptr );
+extern Word ML_(search_one_loctab) ( DebugInfo* di, Addr ptr );
 
 /* Find a CFI-table index containing the specified pointer, or -1 if
    not found.  Binary search.  */
-extern Word ML_(search_one_cfitab) ( const DebugInfo* di, Addr ptr );
+extern Word ML_(search_one_cfitab) ( DebugInfo* di, Addr ptr );
 
 /* Find a FPO-table index containing the specified pointer, or -1
    if not found.  Binary search.  */

@@ -21,9 +21,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-   02110-1301, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 
@@ -271,6 +269,8 @@ typedef
       Ico_U16, 
       Ico_U32, 
       Ico_U64,
+      Ico_U128,  /* 128-bit restricted integer constant,
+                    same encoding scheme as V128 */
       Ico_F32,   /* 32-bit IEEE754 floating */
       Ico_F32i,  /* 32-bit unsigned int to be interpreted literally
                     as a IEEE754 single value. */
@@ -297,6 +297,7 @@ typedef
          UShort U16;
          UInt   U32;
          ULong  U64;
+         UShort U128;
          Float  F32;
          UInt   F32i;
          Double F64;
@@ -313,6 +314,7 @@ extern IRConst* IRConst_U8   ( UChar );
 extern IRConst* IRConst_U16  ( UShort );
 extern IRConst* IRConst_U32  ( UInt );
 extern IRConst* IRConst_U64  ( ULong );
+extern IRConst* IRConst_U128 ( UShort );
 extern IRConst* IRConst_F32  ( Float );
 extern IRConst* IRConst_F32i ( UInt );
 extern IRConst* IRConst_F64  ( Double );
@@ -502,12 +504,18 @@ typedef
       Iop_DivS32,   // ditto, signed
       Iop_DivU64,   // :: I64,I64 -> I64 (simple div, no mod)
       Iop_DivS64,   // ditto, signed
-      Iop_DivU64E,  // :: I64,I64 -> I64 (dividend is 64-bit arg (hi)
-                    //                    concat with 64 0's (low))
-      Iop_DivS64E,  // ditto, signed
+      Iop_DivU128,   // :: I128,I128 -> I128 (simple div, no mod)
+      Iop_DivS128,   // ditto, signed
+
       Iop_DivU32E,  // :: I32,I32 -> I32 (dividend is 32-bit arg (hi)
                     // concat with 32 0's (low))
       Iop_DivS32E,  // ditto, signed
+      Iop_DivU64E,  // :: I64,I64 -> I64 (dividend is 64-bit arg (hi)
+                    //                    concat with 64 0's (low))
+      Iop_DivS64E,  // ditto, signed
+      Iop_DivU128E, // :: I128,I128 -> I128 (dividend is 128-bit arg (hi)
+                    //                    concat with 128 0's (low))
+      Iop_DivS128E, // ditto, signed
 
       Iop_DivModU64to32, // :: I64,I32 -> I64
                          // of which lo half is div and hi half is mod
@@ -525,6 +533,9 @@ typedef
                          // of which lo half is div and hi half is mod
       Iop_DivModU32to32, // :: I32,I32 -> I64
                          // of which lo half is div and hi half is mod
+
+      Iop_ModU128,     // :: I128,I128 -> I128  normal modulo operation
+      Iop_ModS128,     // ditto, signed
 
       /* Integer conversions.  Some of these are redundant (eg
          Iop_64to8 is the same as Iop_64to32 and then Iop_32to8), but
@@ -559,6 +570,8 @@ typedef
       Iop_64HLto128,  // :: (I64,I64) -> I128
       /* 1-bit stuff */
       Iop_Not1,   /* :: Ity_Bit -> Ity_Bit */
+      Iop_And1,   /* :: (Ity_Bit, Ity_Bit) -> Ity_Bit.  Evaluates both args! */
+      Iop_Or1,    /* :: (Ity_Bit, Ity_Bit) -> Ity_Bit.  Evaluates both args! */
       Iop_32to1,  /* :: Ity_I32 -> Ity_Bit, just select bit[0] */
       Iop_64to1,  /* :: Ity_I64 -> Ity_Bit, just select bit[0] */
       Iop_1Uto8,  /* :: Ity_Bit -> Ity_I8,  unsigned widen */
@@ -592,12 +605,21 @@ typedef
       /* :: F32 -> F32 */
       Iop_NegF32, Iop_AbsF32,
 
+      /* :: F16 -> F16 */
+      Iop_NegF16, Iop_AbsF16,
+
       /* Unary operations, with rounding. */
       /* :: IRRoundingMode(I32) x F64 -> F64 */
       Iop_SqrtF64,
 
       /* :: IRRoundingMode(I32) x F32 -> F32 */
       Iop_SqrtF32,
+
+      /* :: IRRoundingMode(I32) x F16 -> F16 */
+      Iop_SqrtF16,
+
+      /* :: IRRoundingMode(I32) x F16 x F16 -> F16 */
+      Iop_SubF16, Iop_AddF16,
 
       /* Comparison, yielding GT/LT/EQ/UN(ordered), as per the following:
             0x45 Unordered
@@ -610,6 +632,7 @@ typedef
       /* :: F64 x F64 -> IRCmpF64Result(I32) */
       Iop_CmpF64,
       Iop_CmpF32,
+      Iop_CmpF16,
       Iop_CmpF128,
 
       /* --- Int to/from FP conversions. --- */
@@ -680,8 +703,10 @@ typedef
       Iop_F32toF64,  /*                       F32 -> F64 */
       Iop_F64toF32,  /* IRRoundingMode(I32) x F64 -> F32 */
 
-      /* Reinterpretation.  Take an F64 and produce an I64 with 
-         the same bit pattern, or vice versa. */
+      /* Reinterpretation.  Take an F32/64/128 and produce an I32/64/128
+         with the same bit pattern, or vice versa. */
+      Iop_ReinterpV128asI128, Iop_ReinterpI128asV128,
+      Iop_ReinterpF128asI128, Iop_ReinterpI128asF128,
       Iop_ReinterpF64asI64, Iop_ReinterpI64asF64,
       Iop_ReinterpF32asI32, Iop_ReinterpI32asF32,
 
@@ -709,6 +734,8 @@ typedef
       Iop_I64UtoF128, /*              unsigned I64  -> F128 */
       Iop_F32toF128,  /*                       F32  -> F128 */
       Iop_F64toF128,  /*                       F64  -> F128 */
+      Iop_I128UtoF128, /*             unsigned I128 -> F128 */
+      Iop_I128StoF128, /*               signed I128 -> F128 */
 
       Iop_F128toI32S, /* IRRoundingMode(I32) x F128 -> signed I32  */
       Iop_F128toI64S, /* IRRoundingMode(I32) x F128 -> signed I64  */
@@ -726,6 +753,8 @@ typedef
       Iop_TruncF128toI32U,  /* truncate F128 -> I32         */
       Iop_TruncF128toI64U,  /* truncate F128 -> I64         */
       Iop_TruncF128toI64S,  /* truncate F128 -> I64         */
+      Iop_TruncF128toI128U, /* truncate F128 -> I128        */
+      Iop_TruncF128toI128S, /* truncate F128 -> I128        */
 
       /* --- guest x86/amd64 specifics, not mandated by 754. --- */
 
@@ -753,8 +782,13 @@ typedef
                              as F128) */
       Iop_RoundF64toInt, /* F64 value to nearest integral value (still
                             as F64) */
+      Iop_RoundF64toIntA0, /* As Iop_RoundF64toInt but ties to above zero*/
+
+      Iop_RoundF64toIntE, /* As Iop_RoundF64toInt but ties to even */
       Iop_RoundF32toInt, /* F32 value to nearest integral value (still
                             as F32) */
+      Iop_RoundF32toIntA0, /* As Iop_RoundF32toInt but ties to above zero*/
+      Iop_RoundF32toIntE, /* As Iop_RoundF32toInt but ties to even */
 
       /* --- guest s390 specifics, not mandated by 754. --- */
 
@@ -1137,6 +1171,9 @@ typedef
       /*   I64U -> D128 */
       Iop_I64UtoD128,
 
+      /*   IRRoundingMode(I32) x I128S -> D128 */
+      Iop_I128StoD128,
+
       /*   IRRoundingMode(I32) x D64 -> D32 */
       Iop_D64toD32,
 
@@ -1178,6 +1215,9 @@ typedef
 
       /*   IRRoundingMode(I32) x D128 -> I64 */
       Iop_D128toI64U,
+
+      /*   IRRoundingMode(I32) x D128 -> I128 */
+      Iop_D128toI128S,
 
       /*   IRRoundingMode(I32) x F32 -> D32 */
       Iop_F32toD32,
@@ -1344,6 +1384,21 @@ typedef
 
       /* ------------------ 128-bit SIMD FP. ------------------ */
 
+      /* --- 16x8 vector FP --- */
+
+      /* binary :: IRRoundingMode(I32) x V128 -> V128 */
+      Iop_Sqrt16Fx8,
+
+      /* ternary :: IRRoundingMode(I32) x V128 x V128 -> V128 */
+      Iop_Add16Fx8, Iop_Sub16Fx8,
+
+      /* binary */
+      Iop_CmpLT16Fx8, Iop_CmpLE16Fx8, Iop_CmpEQ16Fx8,
+
+      /* unary */
+      Iop_Abs16Fx8,
+      Iop_Neg16Fx8,
+
       /* --- 32x4 vector FP --- */
 
       /* ternary :: IRRoundingMode(I32) x V128 x V128 -> V128 */
@@ -1387,6 +1442,8 @@ typedef
       /* Vector floating-point base 2 logarithm */
       Iop_Log2_32Fx4,
 
+      /* Vector floating-point exponential 2^x */
+      Iop_Exp2_32Fx4,
 
       /* Vector Reciprocal Square Root Step computes (3.0 - arg1 * arg2) / 2.0.
          Note, that of one of the arguments is zero and another one is infiinty
@@ -1918,6 +1975,9 @@ typedef
        */
       Iop_MulI128by10ECarry,
 
+     /* 128-bit carry out from ((U64 * U64 -> U128) + (U64 * U64 -> U128)) */
+      Iop_2xMultU64Add128CarryOut,
+
       /* ------------------ 256-bit SIMD Integer. ------------------ */
 
       /* Pack/unpack */
@@ -2011,6 +2071,11 @@ extern void typeOfPrimop ( IROp op,
                            /*OUTs*/ IRType* t_dst, IRType* t_arg1,
                            IRType* t_arg2, IRType* t_arg3, IRType* t_arg4 );
 
+/* Might the given primop trap (eg, attempt integer division by zero)?  If in
+   doubt returns True.  However, the vast majority of primops will never
+   trap. */
+extern Bool primopMightTrap ( IROp op );
+
 /* Encoding of IEEE754-specified rounding modes.
    Note, various front and back ends rely on the actual numerical
    values of these, so do not change them. */
@@ -2024,7 +2089,8 @@ typedef
       Irrm_PREPARE_SHORTER      = 5,  // Round to prepare for shorter 
                                       // precision
       Irrm_AWAY_FROM_ZERO       = 6,  // Round to away from 0
-      Irrm_NEAREST_TIE_TOWARD_0 = 7   // Round to nearest, ties towards 0
+      Irrm_NEAREST_TIE_TOWARD_0 = 7,  // Round to nearest, ties towards 0
+      Irrm_INVALID              = 8   // Invalid mode
    }
    IRRoundingMode;
 
@@ -2133,7 +2199,7 @@ struct _IRExpr {
 
          It is important to get the array size/type exactly correct
          since IR optimisation looks closely at such info in order to
-         establish aliasing/non-aliasing between seperate GetI and
+         establish aliasing/non-aliasing between separate GetI and
          PutI events, which is used to establish when they can be
          reordered, etc.  Putting incorrect info in will lead to
          obscure IR optimisation bugs.
@@ -2381,7 +2447,7 @@ IRExpr* mkIRExprCCall ( IRType retty,
 /* Convenience functions for atoms (IRExprs which are either Iex_Tmp or
  * Iex_Const). */
 static inline Bool isIRAtom ( const IRExpr* e ) {
-   return toBool(e->tag == Iex_RdTmp || e->tag == Iex_Const);
+   return e->tag == Iex_RdTmp || e->tag == Iex_Const;
 }
 
 /* Are these two IR atoms identical?  Causes an assertion
@@ -2420,6 +2486,11 @@ extern Bool eqIRAtom ( const IRExpr*, const IRExpr* );
    executed kernel-entering (system call) instruction.  This makes it
    very much easier (viz, actually possible at all) to back up the
    guest to restart a syscall that has been interrupted by a signal.
+
+   Re Ijk_Extension: the guest state must have the pseudo-register
+   guest_IP_AT_SYSCALL, which is also used for Ijk_Sys_*.  Front ends
+   must set this to the current instruction address before jumping to
+   an extension handler.
 */
 typedef
    enum {
@@ -2452,8 +2523,9 @@ typedef
       Ijk_Sys_int130,     /* amd64/x86 'int $0x82' */
       Ijk_Sys_int145,     /* amd64/x86 'int $0x91' */
       Ijk_Sys_int210,     /* amd64/x86 'int $0xD2' */
-      Ijk_Sys_sysenter    /* x86 'sysenter'.  guest_EIP becomes 
+      Ijk_Sys_sysenter,   /* x86 'sysenter'.  guest_EIP becomes
                              invalid at the point this happens. */
+      Ijk_Extension,      /* invoke guest-specific extension */
    }
    IRJumpKind;
 
@@ -3188,6 +3260,7 @@ extern void sanityCheckIRSB ( const  IRSB*  bb,
                               Bool   require_flatness, 
                               IRType guest_word_size );
 extern Bool isFlatIRStmt ( const IRStmt* );
+extern Bool isFlatIRSB ( const IRSB* );
 
 /* Is this any value actually in the enumeration 'IRType' ? */
 extern Bool isPlausibleIRType ( IRType ty );

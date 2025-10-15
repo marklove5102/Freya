@@ -21,9 +21,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -63,25 +61,30 @@ typedef Int ArenaId;
 // This is both the minimum payload size of a malloc'd block, and its
 // minimum alignment.  Must be a power of 2 greater than 4, and should be
 // greater than 8.
-#if   defined(VGP_x86_linux)    || \
-      defined(VGP_arm_linux)    || \
+#if   defined(VGP_arm_linux)    || \
       defined(VGP_mips32_linux) || \
       (defined(VGP_mips64_linux) && defined(VGABI_N32)) || \
+      defined(VGP_nanomips_linux) || \
       defined(VGP_x86_solaris)
 #  define VG_MIN_MALLOC_SZB        8
 // Nb: We always use 16 bytes for Darwin, even on 32-bits, so it can be used
 // for any AltiVec- or SSE-related type.  This matches the Darwin libc.
 // Also, use 16 bytes for any PPC variant, since 16 is required to make
 // Altiveccery work right.
-#elif defined(VGP_amd64_linux)    || \
+#elif defined(VGP_x86_linux)    || \
+      defined(VGP_amd64_linux)    || \
       defined(VGP_ppc32_linux)    || \
       defined(VGP_ppc64be_linux)  || \
       defined(VGP_ppc64le_linux)  || \
       defined(VGP_s390x_linux)    || \
       (defined(VGP_mips64_linux) && !defined(VGABI_N32)) || \
+      defined(VGP_x86_freebsd)    || \
+      defined(VGP_amd64_freebsd)  || \
+      defined(VGP_arm64_freebsd)  || \
       defined(VGP_x86_darwin)     || \
       defined(VGP_amd64_darwin)   || \
       defined(VGP_arm64_linux)    || \
+      defined(VGP_riscv64_linux)  || \
       defined(VGP_amd64_solaris)
 #  define VG_MIN_MALLOC_SZB       16
 #else

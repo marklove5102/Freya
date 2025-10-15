@@ -4,6 +4,11 @@
 #include <errno.h>
 #include <pthread.h>
 #include <stdio.h>
+#include <stdint.h>
+
+#if defined(VGO_freebsd)
+#include <sys/types.h>
+#endif
 
 static void* thread_func(void* arg)
 {
@@ -21,7 +26,11 @@ int main(int argc, char** argv)
   pthread_detach(thread);
 
   /* Invoke pthread_detach() with an invalid thread ID. */
-  pthread_detach(thread + 8);
+#ifdef VGO_freebsd
+  pthread_detach((pthread_t)12345);
+#else
+  pthread_detach((pthread_t)((uintptr_t)thread + 8));
+#endif
 
   fprintf(stderr, "Finished.\n");
 

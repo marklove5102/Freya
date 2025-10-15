@@ -26,9 +26,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -48,10 +46,14 @@
 #if defined(VGO_linux)
 #  include "vki/vki-linux.h"
 #  include "vki/vki-linux-drm.h"
+#  include "vki/vki-linux-io_uring.h"
+#  include "vki/vki-linux-landlock.h"
 #elif defined(VGO_darwin)
 #  include "vki/vki-darwin.h"
 #elif defined(VGO_solaris)
 #  include "vki/vki-solaris.h"
+#elif defined(VGO_freebsd)
+#  include "vki/vki-freebsd.h"
 #else
 #  error Unknown Plat/OS
 #endif

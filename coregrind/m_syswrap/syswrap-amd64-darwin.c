@@ -21,9 +21,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -363,6 +361,9 @@ void pthread_hijack(Addr self, Addr kport, Addr func, Addr func_arg,
    vex->guest_R8  = stacksize;
    vex->guest_R9  = flags;
    vex->guest_RSP = sp;
+#if DARWIN_VERS >= DARWIN_10_12
+   vex->guest_GS_CONST = self + pthread_tsd_offset;
+#endif
 
    // Record thread's stack and Mach port and pthread struct
    tst->os_state.pthread = self;
@@ -576,7 +577,7 @@ void wqthread_hijack(Addr self, Addr kport, Addr stackaddr, Addr workitem,
 
       // Go!
       /* Same comments as the 'release' in the then-clause.
-         start_thread_NORETURN calls run_thread_NORETURN calls
+         start_thread_NORETURN calls run_a_thread_NORETURN calls
          thread_wrapper which acquires the lock before continuing.
          Let's hope nothing non-thread-local happens until that point.
 

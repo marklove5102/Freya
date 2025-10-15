@@ -22,9 +22,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -672,8 +670,8 @@ void VG_(sigframe_destroy)( ThreadId tid, Bool isRT )
 
    if (VG_(clo_trace_signals))
       VG_(message)(
-         Vg_DebugMsg, 
-         "VG_(signal_return) (thread %u): isRT=%d valid magic; EIP=%#x\n",
+         Vg_DebugMsg,
+         "VG_(sigframe_destroy) (thread %u): isRT=%d valid magic; EIP=%#x\n",
          tid, isRT, tst->arch.vex.guest_EIP);
 
    /* tell the tools */

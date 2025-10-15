@@ -8,7 +8,7 @@
    This file is part of Valgrind, a dynamic binary instrumentation
    framework.
 
-   Copyright IBM Corp. 2010-2017
+   Copyright IBM Corp. 2010-2020
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License as
@@ -21,9 +21,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-   02110-1301, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -168,7 +166,8 @@ typedef enum {
    S390_INSN_VEC_AMODEINTOP,
    S390_INSN_VEC_UNOP,
    S390_INSN_VEC_BINOP,
-   S390_INSN_VEC_TRIOP
+   S390_INSN_VEC_TRIOP,
+   S390_INSN_VEC_REPLICATE
 } s390_insn_tag;
 
 
@@ -180,6 +179,8 @@ typedef enum {
    S390_ALU_AND,
    S390_ALU_OR,
    S390_ALU_XOR,
+   S390_ALU_ILIH,  /* insert low half of 2nd operand into high half of 1st
+                      operand */
    S390_ALU_LSH,
    S390_ALU_RSH,
    S390_ALU_RSHA   /* arithmetic */
@@ -205,6 +206,7 @@ typedef enum {
    S390_VEC_COUNT_ONES,
    S390_VEC_FLOAT_NEG,
    S390_VEC_FLOAT_ABS,
+   S390_VEC_FLOAT_NABS,
    S390_VEC_FLOAT_SQRT,
    S390_UNOP_T_INVALID
 } s390_unop_t;
@@ -364,6 +366,7 @@ typedef enum {
    S390_VEC_PACK_SATURU,
    S390_VEC_COMPARE_EQUAL,
    S390_VEC_OR,
+   S390_VEC_ORC,
    S390_VEC_XOR,
    S390_VEC_AND,
    S390_VEC_MERGEL,
@@ -399,6 +402,7 @@ typedef enum {
    S390_VEC_PWSUM_QW,
 
    S390_VEC_INIT_FROM_GPRS,
+   S390_VEC_INIT_FROM_FPRS,
    S390_VEC_FLOAT_ADD,
    S390_VEC_FLOAT_SUB,
    S390_VEC_FLOAT_MUL,
@@ -737,6 +741,11 @@ typedef struct {
          HReg          op2;    /* 128-bit second operand */
          HReg          op3;    /* 128-bit third operand */
       } vec_triop;
+      struct {
+         HReg          dst;    /* 128-bit result */
+         HReg          op1;    /* 128-bit first operand */
+         UChar         idx;    /* index of element to replicate */
+      } vec_replicate;
    } variant;
 } s390_insn;
 
@@ -852,6 +861,7 @@ s390_insn *s390_insn_vec_binop(UChar size, s390_vec_binop_t, HReg dst, HReg op1,
                                HReg op2);
 s390_insn *s390_insn_vec_triop(UChar size, s390_vec_triop_t, HReg dst, HReg op1,
                                HReg op2, HReg op3);
+s390_insn *s390_insn_vec_replicate(UChar size, HReg dst, HReg op1, UChar idx);
 
 const HChar *s390_insn_as_string(const s390_insn *);
 
@@ -873,6 +883,7 @@ Int   emit_S390Instr       ( Bool *, UChar *, Int, const s390_insn *, Bool,
 const RRegUniverse *getRRegUniverse_S390( void );
 void  genSpill_S390        ( HInstr **, HInstr **, HReg , Int , Bool );
 void  genReload_S390       ( HInstr **, HInstr **, HReg , Int , Bool );
+HInstr* directReload_S390  ( HInstr *, HReg, Short );
 extern s390_insn* genMove_S390(HReg from, HReg to, Bool mode64);
 HInstrArray *iselSB_S390   ( const IRSB *, VexArch, const VexArchInfo *,
                              const VexAbiInfo *, Int, Int, Bool, Bool, Addr);
@@ -896,7 +907,7 @@ VexInvalRange patchProfInc_S390(VexEndness endness_host,
                                 void  *code_to_patch,
                                 const ULong *location_of_counter);
 
-/* KLUDGE: See detailled comment in host_s390_defs.c. */
+/* KLUDGE: See detailled comment in main_main.c. */
 extern UInt s390_host_hwcaps;
 
 /* Convenience macros to test installed facilities */
@@ -928,6 +939,28 @@ extern UInt s390_host_hwcaps;
                       (s390_host_hwcaps & (VEX_HWCAPS_S390X_VX))
 #define s390_host_has_msa5 \
                       (s390_host_hwcaps & (VEX_HWCAPS_S390X_MSA5))
+#define s390_host_has_mi2 \
+                      (s390_host_hwcaps & (VEX_HWCAPS_S390X_MI2))
+#define s390_host_has_lsc2 \
+                      (s390_host_hwcaps & (VEX_HWCAPS_S390X_LSC2))
+#define s390_host_has_vxe \
+                      (s390_host_hwcaps & (VEX_HWCAPS_S390X_VXE))
+#define s390_host_has_nnpa \
+                      (s390_host_hwcaps & (VEX_HWCAPS_S390X_NNPA))
+#define s390_host_has_dflt \
+                      (s390_host_hwcaps & (VEX_HWCAPS_S390X_DFLT))
+#define s390_host_has_vxe2 \
+                      (s390_host_hwcaps & (VEX_HWCAPS_S390X_VXE2))
+#define s390_host_has_vxd \
+                      (s390_host_hwcaps & (VEX_HWCAPS_S390X_VXD))
+#define s390_host_has_msa \
+                      (s390_host_hwcaps & (VEX_HWCAPS_S390X_MSA))
+#define s390_host_has_msa4 \
+                      (s390_host_hwcaps & (VEX_HWCAPS_S390X_MSA4))
+#define s390_host_has_msa8 \
+                      (s390_host_hwcaps & (VEX_HWCAPS_S390X_MSA8))
+#define s390_host_has_msa9 \
+                      (s390_host_hwcaps & (VEX_HWCAPS_S390X_MSA9))
 #endif /* ndef __VEX_HOST_S390_DEFS_H */
 
 /*---------------------------------------------------------------*/

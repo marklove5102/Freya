@@ -8,7 +8,6 @@
    framework.
 
    Copyright (C) 2010-2017 RT-RK
-      mips-valgrind@rt-rk.com
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License as
@@ -21,9 +20,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -3319,7 +3316,7 @@ static UChar *mkFormS(UChar * p, UInt opc1, UInt rRD, UInt rRS, UInt rRT,
    vassert(rRS < 0x20);
    vassert(rRT < 0x20);
    vassert(opc2 <= 0x3F);
-   vassert(sa >= 0 && sa <= 0x3F);
+   vassert(sa <= 0x3F);
 
    theInstr = ((opc1 << 26) | (rRS << 21) | (rRT << 16) | (rRD << 11) |
               ((sa & 0x1F) << 6) | (opc2));

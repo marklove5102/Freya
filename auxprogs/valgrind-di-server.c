@@ -30,9 +30,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -100,7 +98,7 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <signal.h>
-#include <sys/poll.h>
+#include <poll.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -652,7 +650,7 @@ static UInt calc_gnu_debuglink_crc32(/*OUT*/Bool* ok, int fd, ULong size)
       ULong img_szB  = size;
       ULong curr_off = 0;
       while (1) {
-         assert(curr_off >= 0 && curr_off <= img_szB);
+         assert(curr_off <= img_szB);
          if (curr_off == img_szB) break;
          ULong avail = img_szB - curr_off;
          assert(avail > 0 && avail <= img_szB);
@@ -776,10 +774,12 @@ static Bool handle_transaction ( int conn_no )
          int r = fstat(fd, &stat_buf);
          if (r != 0) {
             res = mk_Frame_asciiz("FAIL", "OPEN: cannot stat file");
+            close(fd);
             ok = False;
          }
          if (ok && stat_buf.st_size == 0) {
             res = mk_Frame_asciiz("FAIL", "OPEN: file has zero size");
+            close(fd);
             ok = False;
          }
          if (ok) {

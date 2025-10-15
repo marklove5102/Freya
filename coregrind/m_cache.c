@@ -22,9 +22,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -338,7 +336,7 @@ Intel_cache_info(Int level, VexCacheInfo *ci)
                }
                break;
             default:
-               VG_(debugLog)(1, "cache", "warning: L%u cache ignored\n",
+               VG_(debugLog)(1, "cache", "warning: L%d cache ignored\n",
                              (info[0] & 0xe0) >> 5);
                break;
             }
@@ -540,10 +538,20 @@ get_cache_info(VexArchInfo *vai)
 
 #elif defined(VGA_arm) || defined(VGA_ppc32)    || \
    defined(VGA_ppc64be) || defined(VGA_ppc64le) || \
-   defined(VGA_mips32) || defined(VGA_mips64) || defined(VGA_arm64)
+   defined(VGA_mips32) || defined(VGA_mips64) || \
+   defined(VGA_arm64) || defined(VGA_nanomips) || \
+   defined(VGA_riscv64)
 static Bool
 get_cache_info(VexArchInfo *vai)
 {
+#if defined(VGA_arm64)
+   unsigned long val;
+   asm volatile("mrs %0, dczid_el0" : "=r" (val));
+   val &= 0xf;
+   // The ARM manual says that 4 bits are used but 9 is the maximum
+   vg_assert(val <= 9);
+   vai->arm64_cache_block_size = val;
+#endif
    vai->hwcache_info.icaches_maintain_coherence = False;
 
    return False;   // not yet

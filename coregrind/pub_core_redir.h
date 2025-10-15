@@ -21,9 +21,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -63,7 +61,7 @@
 //--------------------------------------------------------------------
 
 /* Notify the module of a new DebugInfo (called from m_debuginfo). */
-extern void VG_(redir_notify_new_DebugInfo)( const DebugInfo* );
+extern void VG_(redir_notify_new_DebugInfo)( DebugInfo* );
 
 /* Notify the module of the disappearance of a DebugInfo (also called
    from m_debuginfo). */

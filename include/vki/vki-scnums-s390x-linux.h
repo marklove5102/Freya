@@ -21,9 +21,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -317,6 +315,9 @@
 #define __NR_getrandom		349
 #define __NR_memfd_create	350
 
+#define __NR_execveat		354
+
+#define __NR_userfaultfd		355
 #define __NR_membarrier			356
 #define __NR_recvmmsg			357
 #define __NR_sendmmsg			358
@@ -342,8 +343,11 @@
 #define __NR_s390_guarded_storage	378
 #define __NR_statx			379
 #define __NR_s390_sthyi			380
+#define __NR_kexec_file_load		381
+#define __NR_io_pgetevents		382
+#define __NR_rseq			383
 
-#define NR_syscalls 381
+#define NR_syscalls 384
 
 /* 
  * There are some system calls that are not present on 64 bit, some

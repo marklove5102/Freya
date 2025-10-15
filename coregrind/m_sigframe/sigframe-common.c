@@ -26,9 +26,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -49,7 +47,7 @@ static void track_frame_memory ( Addr addr, SizeT size, ThreadId tid )
    VG_TRACK( new_mem_stack_signal, addr - VG_STACK_REDZONE_SZB, size, tid );
 }
 
-#if defined(VGO_linux) || defined(VGO_solaris)
+#if defined(VGO_linux) || defined(VGO_solaris) || defined(VGO_freebsd)
 
 /* Extend the stack segment downwards if needed so as to ensure the
    new signal frames are mapped to something.  Return a Bool

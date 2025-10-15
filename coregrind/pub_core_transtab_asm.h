@@ -21,9 +21,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -69,12 +67,9 @@
    sets to ever be used.  So instead the function is
    (address ^ (address >>u VG_TT_FAST_BITS))[VG_TT_FAST_BITS-1+2 : 0+2]'.
 
-   On arm32, the minimum instruction size is 2, so we discard only the least
-   significant bit of the address, hence:
-   (address ^ (address >>u VG_TT_FAST_BITS))[VG_TT_FAST_BITS-1+1 : 0+1]'.
-
-   On s390x the rightmost bit of an instruction address is zero, so the arm32
-   scheme is used. */
+   On arm32/s390x/riscv64, the minimum instruction size is 2, so we discard only
+   the least significant bit of the address, hence:
+   (address ^ (address >>u VG_TT_FAST_BITS))[VG_TT_FAST_BITS-1+1 : 0+1]'. */
 
 #define VG_TT_FAST_BITS 13
 #define VG_TT_FAST_SETS (1 << VG_TT_FAST_BITS)
@@ -83,8 +78,9 @@
 // Log2(sizeof(FastCacheSet)).  This is needed in the handwritten assembly.
 
 #if defined(VGA_amd64) || defined(VGA_arm64) \
-    || defined(VGA_ppc64be) || defined(VGA_ppc64le) || defined(VGA_mips64) \
-    || defined(VGA_s390x)
+    || defined(VGA_ppc64be) || defined(VGA_ppc64le) \
+    || (defined(VGA_mips64) && defined(VGABI_64)) \
+    || defined(VGA_s390x) || defined(VGA_riscv64)
   // And all other 64-bit hosts
 # define VG_FAST_CACHE_SET_BITS 6
   // These FCS_{g,h}{0,1,2,3} are the values of
@@ -99,7 +95,8 @@
 # define FCS_h3 56
 
 #elif defined(VGA_x86) || defined(VGA_arm) || defined(VGA_ppc32) \
-      || defined(VGA_mips32)
+      || defined(VGA_mips32) || defined(VGP_nanomips_linux) \
+      || (defined(VGA_mips64) && defined(VGABI_N32))
   // And all other 32-bit hosts
 # define VG_FAST_CACHE_SET_BITS 5
 # define FCS_g0 0

@@ -18,18 +18,16 @@
                          ::: "0"); \
    })
 
-unsigned
-get_rounding_mode(void)
-{
-   unsigned fpc;
-
-   __asm__ volatile ("stfpc  %0\n\t" : "=m"(fpc));
-
-   return fpc & 0x7;
-}
+#define get_rounding_mode() \
+   ({ \
+      unsigned fpc; \
+      __asm__ volatile ("stfpc  %0" : "=Q"(fpc)); \
+      fpc & 0x7; \
+   })
 
 int main(void)
 {
+   setlinebuf(stdout);
    printf("initial rounding mode = %u\n", get_rounding_mode());
 
    /* Set basic rounding modes in various ways */
@@ -60,7 +58,7 @@ int main(void)
    srnmb(0,001);
    printf("rounding mode = %u\n", get_rounding_mode());
 
-   srnmb0(004);    // -> emul warning invalid rounding mode
+   srnmb0(004);    // -> specification exception
    printf("rounding mode = %u\n", get_rounding_mode());
 
    return 0;

@@ -22,9 +22,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -51,7 +49,7 @@ typedef struct {
 } ExeHandler;
 
 static ExeHandler exe_handlers[] = {
-#  if defined(VGO_linux) || defined(VGO_solaris)
+#  if defined(VGO_linux) || defined(VGO_solaris) || defined(VGO_freebsd)
    { VG_(match_ELF),    VG_(load_ELF) },
 #  elif defined(VGO_darwin)
    { VG_(match_macho),  VG_(load_macho) },
@@ -144,7 +142,7 @@ Int VG_(do_exec_inner)(const HChar* exe, ExeInfo* info)
    if (sr_isError(res))
       return sr_Err(res);
 
-   vg_assert2(sr_Res(res) >= 0 && sr_Res(res) < EXE_HANDLER_COUNT, 
+   vg_assert2(sr_Res(res) < EXE_HANDLER_COUNT,
               "invalid VG_(pre_exec_check) result");
 
    ret = (*exe_handlers[sr_Res(res)].load_fn)(fd, exe, info);

@@ -21,9 +21,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-   02110-1301, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 
@@ -1143,7 +1141,7 @@ void ppX86Instr ( const X86Instr* i, Bool mode64 ) {
          ppHRegX86(i->Xin.FpCmp.dst);
          break;
       case Xin_SseConst:
-         vex_printf("const $0x%04x,", (Int)i->Xin.SseConst.con);
+         vex_printf("const $0x%04x,", (UInt)i->Xin.SseConst.con);
          ppHRegX86(i->Xin.SseConst.dst);
          break;
       case Xin_SseLdSt:

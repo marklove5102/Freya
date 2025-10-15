@@ -20,14 +20,12 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
 
-#if defined(VGO_linux) || defined(VGO_darwin) || defined(VGO_solaris)
+#if defined(VGO_linux) || defined(VGO_darwin) || defined(VGO_solaris) || defined(VGO_freebsd)
 
 #ifndef __PRIV_UME_H
 #define __PRIV_UME_H
@@ -36,7 +34,7 @@
 
 extern Int VG_(do_exec_inner)(const HChar *exe, ExeInfo *info);
 
-#if defined(VGO_linux) || defined(VGO_solaris)
+#if defined(VGO_linux) || defined(VGO_solaris) || defined(VGO_freebsd)
 extern Bool VG_(match_ELF) ( const void *hdr, SizeT len );
 extern Int  VG_(load_ELF)  ( Int fd, const HChar *name, ExeInfo *info );
 #elif defined(VGO_darwin)

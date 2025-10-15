@@ -22,9 +22,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -74,7 +72,8 @@ static inline UWord VG_TT_FAST_HASH ( Addr guest ) {
    return merged & VG_TT_FAST_MASK;
 }
 
-#elif defined(VGA_s390x) || defined(VGA_arm)
+#elif defined(VGA_s390x) || defined(VGA_arm) || defined(VGA_nanomips) \
+      || defined(VGA_riscv64)
 static inline UWord VG_TT_FAST_HASH ( Addr guest ) {
    // Instructions are 2-byte aligned.
    UWord merged = ((UWord)guest) >> 1;
@@ -202,8 +201,8 @@ extern void VG_(discard_translations) ( Addr  start, ULong range,
 
 extern void VG_(print_tt_tc_stats) ( void );
 
-extern UInt VG_(get_bbs_translated) ( void );
-extern UInt VG_(get_bbs_discarded_or_dumped) ( void );
+extern ULong VG_(get_bbs_translated) ( void );
+extern ULong VG_(get_bbs_discarded_or_dumped) ( void );
 
 /* Add to / search the auxiliary, small, unredirected translation
    table. */

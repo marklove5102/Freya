@@ -22,9 +22,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -222,7 +220,7 @@ void VG_(sigframe_create) ( ThreadId tid,
 
    if (VG_(clo_trace_signals))
       VG_(message)(Vg_DebugMsg,
-                   "sigframe_create (thread %u): "
+                   "VG_(sigframe_create) (thread %u): "
                    "next RIP=%#lx, next RSP=%#lx\n",
                    tid, (Addr)handler, (Addr)frame );
 }
@@ -265,7 +263,7 @@ void VG_(sigframe_destroy)( ThreadId tid, Bool isRT )
 
    if (VG_(clo_trace_signals))
       VG_(message)(Vg_DebugMsg,
-                   "sigframe_destroy (thread %d): "
+                   "VG_(sigframe_destroy) (thread %d): "
                    "valid magic; next RIP=%#llx\n",
                    tid, tst->arch.vex.guest_RIP);
 

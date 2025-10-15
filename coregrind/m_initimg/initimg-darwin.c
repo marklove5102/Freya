@@ -22,9 +22,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -48,7 +46,7 @@
 #include "pub_core_options.h"
 #include "pub_core_tooliface.h"       /* VG_TRACK */
 #include "pub_core_threadstate.h"     /* ThreadArchState */
-#include "priv_initimg_pathscan.h"
+#include "pub_core_pathscan.h"        /* find_executable */
 #include "pub_core_initimg.h"         /* self */
 
 
@@ -63,10 +61,9 @@ static void load_client ( /*OUT*/ExeInfo* info,
 {
    const HChar* exe_name;
    Int    ret;
-   SysRes res;
 
    vg_assert( VG_(args_the_exename) != NULL);
-   exe_name = ML_(find_executable)( VG_(args_the_exename) );
+   exe_name = VG_(find_executable)( VG_(args_the_exename) );
 
    if (!exe_name) {
       VG_(printf)("valgrind: %s: command not found\n", VG_(args_the_exename));
@@ -77,12 +74,6 @@ static void load_client ( /*OUT*/ExeInfo* info,
    ret = VG_(do_exec)(exe_name, info);
 
    // The client was successfully loaded!  Continue.
-
-   /* Get hold of a file descriptor which refers to the client
-      executable.  This is needed for attaching to GDB. */
-   res = VG_(open)(exe_name, VKI_O_RDONLY, VKI_S_IRUSR);
-   if (!sr_isError(res))
-      VG_(cl_exec_fd) = sr_Res(res);
 
    /* Copy necessary bits of 'info' that were filled in */
    *client_ip  = info->init_ip;
@@ -136,7 +127,7 @@ static HChar** setup_client_env ( HChar** origenv, const HChar* toolname)
       paths.  We might not need the space for vgpreload_<tool>.so, but it
       doesn't hurt to over-allocate briefly.  The 16s are just cautious
       slop. */
-   Int preload_core_path_len = vglib_len + sizeof(preload_core) 
+   Int preload_core_path_len = vglib_len + VG_(strlen)(preload_core)
                                          + sizeof(VG_PLATFORM) + 16;
    Int preload_tool_path_len = vglib_len + VG_(strlen)(toolname) 
                                          + sizeof(VG_PLATFORM) + 16;

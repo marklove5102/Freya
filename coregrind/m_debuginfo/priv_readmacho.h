@@ -22,9 +22,7 @@
    General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307, USA.
+   along with this program; if not, see <http://www.gnu.org/licenses/>.
 
    The GNU General Public License is contained in the file COPYING.
 */
@@ -36,8 +34,8 @@
 #include "pub_core_debuginfo.h"  // DebugInfo
 
 /* Identify a Mach-O object file by peering at the first few bytes of
-   it. */
-extern Bool ML_(is_macho_object_file)( const void* buf, SizeT size );
+   it. Also count the number of RW segements. */
+extern Bool ML_(check_macho_and_get_rw_loads)( Int fd, Int* rw_loads );
 
 /* The central function for reading Mach-O debug info.  For the
    object/exe specified by the DebugInfo, find Mach-O sections, then read
